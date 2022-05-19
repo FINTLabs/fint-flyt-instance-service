@@ -43,7 +43,7 @@ jobs:
         uses: azure/k8s-deploy@v3.0
         with:
           manifests: |
-           k8s/manifests/alpha/common.yaml
+           k8s/manifests/alpha/demo.yaml
           images: |
            ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
           namespace: demo
@@ -52,7 +52,7 @@ jobs:
         uses: azure/k8s-deploy@v3.0
         with:
           manifests: |
-            k8s/manifests/alpha/common.yaml
+            k8s/manifests/alpha/viken-no.yaml
           images: |
             ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
           namespace: viken-no
