@@ -67,6 +67,8 @@ spec:
           envFrom:
             - secretRef:
                 name: aiven-kafka
+            - secretRef:
+                name: flyt-demo-fint-flyt-instance-service
           env:
             - {name: TZ, value: Europe/Oslo}
             - {name: JAVA_TOOL_OPTIONS, value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'}
