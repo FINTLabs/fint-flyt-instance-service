@@ -15,6 +15,13 @@ spring:
     password: password
   jpa:
     properties:
+#      javax:
+#        persistence:
+#          schema-generation:
+#            scripts:
+#              action: create
+#              create-target: __init.sql
+#              create-source: metadata
       hibernate:
         jdbc:
           lob:
@@ -22,7 +29,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         enable_lazy_load_no_trans: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+    flyway:
+      locations: classpath:db/migration/
   security:
     oauth2:
       resourceserver:
