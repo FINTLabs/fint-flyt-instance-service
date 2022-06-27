@@ -5,6 +5,13 @@ metadata:
 spec:
   itemPath: "vaults/aks-alpha-vault/items/aiven-kafka"
 ---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: viken-no-fint-flyt-instance-service
+spec:
+  itemPath: "vaults/aks-alpha-vault/items/viken-no-fint-flyt-instance-service"
+---
 apiVersion: v1
 kind: Service
 metadata:
