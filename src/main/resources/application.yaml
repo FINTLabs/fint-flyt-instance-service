@@ -1,13 +1,15 @@
 fint:
+  org-id: fintlabs.no
   kafka:
     topic:
-      org-id: fintlabs.no
+      org-id: ${fint.org-id}
+      domain-context: flyt
     application-id: fint-flyt-instance-service
 spring:
   kafka:
     bootstrap-servers: localhost:29092
     consumer:
-      group-id: fint-flyt-instance-service
+      group-id: ${fint.kafka.application-id}
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/fint-flyt-instance-service
