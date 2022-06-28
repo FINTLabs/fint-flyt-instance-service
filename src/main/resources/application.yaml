@@ -30,8 +30,8 @@ spring:
         enable_lazy_load_no_trans: true
     hibernate:
       ddl-auto: validate
-    flyway:
-      locations: classpath:db/migration/
+  flyway:
+    locations: classpath:db/migration/
   security:
     oauth2:
       resourceserver:
