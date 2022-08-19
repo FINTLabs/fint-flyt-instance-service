@@ -9,7 +9,6 @@ import lombok.Setter;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "data")
 public @Data
 class Document {
 
@@ -20,7 +19,8 @@ class Document {
     @Setter(AccessLevel.NONE)
     private long id;
 
-    private String format;
+    private String type;
     private String uri;
+    private String base64;
 
 }

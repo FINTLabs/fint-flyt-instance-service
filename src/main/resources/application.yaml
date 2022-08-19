@@ -11,6 +11,8 @@ spring:
     consumer:
       group-id: ${fint.kafka.application-id}
   datasource:
+    hikari:
+      schema: fintlabs_no
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/fint-flyt-instance-service
     username: postgres

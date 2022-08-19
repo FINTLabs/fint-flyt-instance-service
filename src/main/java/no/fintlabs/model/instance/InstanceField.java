@@ -9,7 +9,6 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "instance_fields")
 public class InstanceField {
 
     @Id
@@ -19,7 +18,7 @@ public class InstanceField {
     @Getter(AccessLevel.NONE)
     private long id;
 
-    private String name;
+    private String key;
     private String value;
 
 }

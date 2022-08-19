@@ -46,7 +46,7 @@ dependencies {
 
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'no.fintlabs:fint-kafka:2.0.0'
-    implementation 'no.fintlabs:fint-flyt-kafka:0.0.5'
+    implementation 'no.fintlabs:fint-flyt-kafka:0.0.9'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
