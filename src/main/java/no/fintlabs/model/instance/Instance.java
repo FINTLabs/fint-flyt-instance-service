@@ -12,7 +12,6 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "instances")
 public class Instance {
 
     @Id
@@ -21,17 +20,15 @@ public class Instance {
     @Setter(AccessLevel.NONE)
     private long id;
 
-    private String formId;
+    private String sourceApplicationInstanceUri;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "instance_id")
+    @MapKey(name = "key")
+    private Map<String, InstanceField> fieldPerKey;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "instance_id")
     private List<Document> documents;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "instance_id")
-    @MapKey(name = "name")
-    private Map<String, InstanceField> fields;
-
-    private String uri;
 
 }
