@@ -1,0 +1,13 @@
+fint:
+  org-id: fintlabs.no
+  kafka:
+    default-replicas: 1
+spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+  datasource:
+    hikari:
+      schema: fintlabs_no
+    url: jdbc:postgresql://localhost:5433/fint-flyt-instance-service
+    username: postgres
+    password: password

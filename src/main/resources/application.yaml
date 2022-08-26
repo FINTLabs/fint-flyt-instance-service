@@ -1,43 +1,8 @@
 fint:
-  org-id: fintlabs.no
-  kafka:
-    topic:
-      org-id: ${fint.org-id}
-      domain-context: flyt
-    application-id: fint-flyt-instance-service
+  application-id: fint-flyt-instance-service
 spring:
-  kafka:
-    bootstrap-servers: localhost:29092
-    consumer:
-      group-id: ${fint.kafka.application-id}
-  datasource:
-    hikari:
-      schema: fintlabs_no
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/fint-flyt-instance-service
-    username: postgres
-    password: password
-  jpa:
-    properties:
-#      javax:
-#        persistence:
-#          schema-generation:
-#            scripts:
-#              action: create
-#              create-target: __init.sql
-#              create-source: metadata
-      hibernate:
-        jdbc:
-          lob:
-            non_contextual_creation: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        enable_lazy_load_no_trans: true
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    locations: classpath:db/migration/
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://idp.felleskomponent.no/nidp/oauth/nam
+  profiles:
+    include:
+      - flyt-kafka
+      - flyt-logging
+      - flyt-postgres

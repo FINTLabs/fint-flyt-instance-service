@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        enable_lazy_load_no_trans: true
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    locations: classpath:db/migration/
