@@ -45,8 +45,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
 
     implementation 'org.springframework.kafka:spring-kafka'
-    implementation 'no.fintlabs:fint-kafka:2.0.0'
-    implementation 'no.fintlabs:fint-flyt-kafka:0.0.9'
+    implementation 'no.fintlabs:fint-kafka:2.3.0'
+    implementation 'no.fintlabs:fint-flyt-kafka:1.0.0'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
