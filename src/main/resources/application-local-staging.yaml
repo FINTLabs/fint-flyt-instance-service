@@ -11,3 +11,5 @@ spring:
     url: jdbc:postgresql://localhost:5433/fint-flyt-instance-service
     username: postgres
     password: password
+server:
+  port: 8081
