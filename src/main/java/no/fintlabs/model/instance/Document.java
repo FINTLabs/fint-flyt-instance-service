@@ -19,8 +19,9 @@ class Document {
     @Setter(AccessLevel.NONE)
     private long id;
 
+    private String name;
     private String type;
-    private String uri;
+    private String encoding;
     private String base64;
 
 }
