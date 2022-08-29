@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    include: local-staging
   jpa:
     properties:
       javax:
