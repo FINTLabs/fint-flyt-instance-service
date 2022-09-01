@@ -20,7 +20,7 @@ public class InstanceRegistrationErrorHandlerService extends InstanceFlowErrorHa
     }
 
     @Override
-    public void handleInstanceFlowRecord(Throwable throwable, InstanceFlowHeaders instanceFlowHeaders, ConsumerRecord<?, ?> consumerRecord) {
+    public void handleInstanceFlowRecord(Throwable cause, InstanceFlowHeaders instanceFlowHeaders, ConsumerRecord<?, ?> consumerRecord) {
         instanceRegistrationErrorEventProducerService.publishGeneralSystemErrorEvent(instanceFlowHeaders);
     }
 
