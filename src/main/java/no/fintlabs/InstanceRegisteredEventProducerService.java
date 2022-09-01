@@ -12,22 +12,22 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class NewInstanceEventProducerService {
+public class InstanceRegisteredEventProducerService {
 
     private final InstanceFlowEventProducer<Instance> newInstanceEventProducer;
     private final EventTopicNameParameters newInstanceEventTopicNameParameters;
 
-    public NewInstanceEventProducerService(
+    public InstanceRegisteredEventProducerService(
             InstanceFlowEventProducerFactory instanceFlowEventProducerFactory,
             EventTopicService eventTopicService) {
         this.newInstanceEventProducer = instanceFlowEventProducerFactory.createProducer(Instance.class);
         this.newInstanceEventTopicNameParameters = EventTopicNameParameters.builder()
-                .eventName("new-instance")
+                .eventName("instance-registered")
                 .build();
         eventTopicService.ensureTopic(newInstanceEventTopicNameParameters, 0);
     }
 
-    public void sendNewInstance(InstanceFlowHeaders instanceFlowHeaders, Instance instance) {
+    public void publish(InstanceFlowHeaders instanceFlowHeaders, Instance instance) {
         newInstanceEventProducer.send(
                 InstanceFlowEventProducerRecord.<Instance>builder()
                         .topicNameParameters(newInstanceEventTopicNameParameters)

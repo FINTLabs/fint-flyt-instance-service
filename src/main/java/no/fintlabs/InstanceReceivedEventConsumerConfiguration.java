@@ -5,24 +5,24 @@ import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
 import no.fintlabs.model.instance.Instance;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.listener.CommonLoggingErrorHandler;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 
 @Configuration
-public class IncomingInstanceEventConsumerConfiguration {
+public class InstanceReceivedEventConsumerConfiguration {
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, Instance> incomingInstanceConsumer(
+    public ConcurrentMessageListenerContainer<String, Instance> instanceReceivedEventConsumer(
             InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
             InstanceRepository instanceRepository,
-            NewInstanceEventProducerService newInstanceEventProducerService
+            InstanceRegisteredEventProducerService instanceRegisteredEventProducerService,
+            InstanceRegistrationErrorHandlerService instanceRegistrationErrorHandlerService
     ) {
         return instanceFlowEventConsumerFactoryService.createFactory(
                 Instance.class,
                 consumerRecord -> {
                     Instance persistedInstance = instanceRepository.save(consumerRecord.getConsumerRecord().value());
                     instanceRepository.flush();
-                    newInstanceEventProducerService.sendNewInstance(
+                    instanceRegisteredEventProducerService.publish(
                             consumerRecord
                                     .getInstanceFlowHeaders()
                                     .toBuilder()
@@ -31,11 +31,11 @@ public class IncomingInstanceEventConsumerConfiguration {
                             persistedInstance
                     );
                 },
-                new CommonLoggingErrorHandler(),
+                instanceRegistrationErrorHandlerService,
                 false
         ).createContainer(
                 EventTopicNameParameters.builder()
-                        .eventName("incoming-instance")
+                        .eventName("instance-received")
                         .build()
         );
 
