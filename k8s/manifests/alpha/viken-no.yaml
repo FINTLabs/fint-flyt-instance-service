@@ -25,6 +25,32 @@ spec:
   selector:
     io.kompose.service: fint-flyt-instance-service
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-fint-flyt-instance-service-internal
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+    nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      auth_request_set $token $upstream_http_authorization;
+      proxy_set_header Authorization $token;
+      proxy_pass_header Authorization;
+spec:
+  rules:
+    - host: "viken-no-skjema.vigoiks.no"
+      http:
+        paths:
+          - path: /api/intern/instans
+            pathType: Prefix
+            backend:
+              service:
+                name: fint-flyt-instance-service
+                port:
+                  number: 8080
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,3 +100,5 @@ spec:
             - { name: JAVA_TOOL_OPTIONS, value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M' }
             - { name: fint.org-id, value: 'viken.no' }
             - { name: spring.datasource.hikari.schema, value: 'viken_no' }
+            - { name: fint.flyt.resource-server.security.api.internal.enabled, value: 'true' }
+            - { name: fint.flyt.resource-server.security.api.internal.authorized-org-ids, value: 'viken.no, vigo.no' }

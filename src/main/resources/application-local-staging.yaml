@@ -1,5 +1,12 @@
 fint:
   org-id: fintlabs.no
+  flyt:
+    resource-server:
+      security:
+        api:
+          internal:
+            enabled: true
+            authorized-org-ids: 'viken.no, vigo.no'
   kafka:
     default-replicas: 1
 spring:

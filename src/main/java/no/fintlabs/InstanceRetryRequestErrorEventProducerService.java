@@ -10,19 +10,19 @@ import no.fintlabs.kafka.event.error.topic.ErrorEventTopicService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class InstanceRegistrationErrorEventProducerService {
+public class InstanceRetryRequestErrorEventProducerService {
 
     private final InstanceFlowErrorEventProducer instanceFlowErrorEventProducer;
     private final ErrorEventTopicNameParameters topicNameParameters;
 
-    public InstanceRegistrationErrorEventProducerService(
+    public InstanceRetryRequestErrorEventProducerService(
             ErrorEventTopicService errorEventTopicService,
             InstanceFlowErrorEventProducer instanceFlowErrorEventProducer
     ) {
         this.instanceFlowErrorEventProducer = instanceFlowErrorEventProducer;
 
         this.topicNameParameters = ErrorEventTopicNameParameters.builder()
-                .errorEventName("instance-registration-error")
+                .errorEventName("instance-retry-request-error")
                 .build();
 
         errorEventTopicService.ensureTopic(topicNameParameters, 0);
@@ -41,5 +41,6 @@ public class InstanceRegistrationErrorEventProducerService {
                         .build()
         );
     }
+
 
 }

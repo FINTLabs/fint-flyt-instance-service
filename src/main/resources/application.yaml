@@ -1,8 +1,12 @@
 fint:
   application-id: fint-flyt-instance-service
+server:
+  error:
+    include-message: always
 spring:
   profiles:
     include:
       - flyt-kafka
       - flyt-logging
       - flyt-postgres
+      - flyt-resource-server
