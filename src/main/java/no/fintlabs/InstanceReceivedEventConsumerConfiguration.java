@@ -26,7 +26,7 @@ public class InstanceReceivedEventConsumerConfiguration {
                             consumerRecord
                                     .getInstanceFlowHeaders()
                                     .toBuilder()
-                                    .instanceId(String.valueOf(persistedInstance.getId()))
+                                    .instanceId(persistedInstance.getId())
                                     .build(),
                             persistedInstance
                     );

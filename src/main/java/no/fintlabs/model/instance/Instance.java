@@ -13,7 +13,7 @@ import java.util.Map;
 @Builder
 @Entity
 public class Instance {
-
+    // TODO: 30/09/2022 change to SEQUENCE per table 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
