@@ -37,12 +37,10 @@ public class InstanceRetryController {
     }
 
     @PostMapping("/instans/{instanceId}/handlingsforesporsel/prov-igjen")
-    public ResponseEntity<?> retry(
-            @PathVariable String instanceId
-    ) {
+    public ResponseEntity<?> retry(@PathVariable Long instanceId) {
         InstanceFlowHeaders instanceFlowHeaders = null;
         try {
-            Instance instance = instanceRepository.getById(Long.parseLong(instanceId));
+            Instance instance = instanceRepository.getById(instanceId);
 
             instanceFlowHeaders = instanceFlowHeadersForRegisteredInstanceRequestProducerService
                     .get(instanceId)

@@ -20,7 +20,7 @@ import java.util.Optional;
 public class InstanceFlowHeadersForRegisteredInstanceRequestProducerService {
 
     private final RequestTopicNameParameters requestTopicNameParameters;
-    private final RequestProducer<String, InstanceFlowHeaders> requestProducer;
+    private final RequestProducer<Long, InstanceFlowHeaders> requestProducer;
 
     public InstanceFlowHeadersForRegisteredInstanceRequestProducerService(
             @Value("${fint.kafka.application-id}") String applicationId,
@@ -41,7 +41,7 @@ public class InstanceFlowHeadersForRegisteredInstanceRequestProducerService {
 
         this.requestProducer = requestProducerFactory.createProducer(
                 replyTopicNameParameters,
-                String.class,
+                Long.class,
                 InstanceFlowHeaders.class,
                 RequestProducerConfiguration
                         .builder()
@@ -50,9 +50,9 @@ public class InstanceFlowHeadersForRegisteredInstanceRequestProducerService {
         );
     }
 
-    public Optional<InstanceFlowHeaders> get(String instanceId) {
+    public Optional<InstanceFlowHeaders> get(Long instanceId) {
         return requestProducer.requestAndReceive(
-                RequestProducerRecord.<String>builder()
+                RequestProducerRecord.<Long>builder()
                         .topicNameParameters(requestTopicNameParameters)
                         .value(instanceId)
                         .build()
