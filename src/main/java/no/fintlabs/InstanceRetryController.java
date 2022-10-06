@@ -45,7 +45,7 @@ public class InstanceRetryController {
             instanceFlowHeaders = instanceFlowHeadersForRegisteredInstanceRequestProducerService
                     .get(instanceId)
                     .map(ifh -> ifh.toBuilder()
-                            .correlationId(UUID.randomUUID().toString())
+                            .correlationId(UUID.randomUUID())
                             .build()
                     )
                     .orElseThrow(() -> new NoInstanceFlowHeadersException(instanceId));
