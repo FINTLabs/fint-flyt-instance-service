@@ -43,7 +43,7 @@ spec:
     - host: "viken-no-skjema.vigoiks.no"
       http:
         paths:
-          - path: /api/intern/instans
+          - path: /api/intern/handlinger/instanser
             pathType: Prefix
             backend:
               service:

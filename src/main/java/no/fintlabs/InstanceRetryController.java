@@ -36,7 +36,7 @@ public class InstanceRetryController {
         this.instanceRetryRequestErrorEventProducerService = instanceRetryRequestErrorEventProducerService;
     }
 
-    @PostMapping("/instans/{instanceId}/handlingsforesporsel/prov-igjen")
+    @PostMapping("handlinger/instanser/{instanceId}/prov-igjen")
     public ResponseEntity<?> retry(@PathVariable Long instanceId) {
         InstanceFlowHeaders instanceFlowHeaders = null;
         try {
