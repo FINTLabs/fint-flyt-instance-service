@@ -1,8 +1,8 @@
 create table document
 (
     id          bigserial not null,
-    base64      varchar(255),
     encoding    varchar(255),
+    file_id     uuid,
     name        varchar(255),
     type        varchar(255),
     instance_id int8,

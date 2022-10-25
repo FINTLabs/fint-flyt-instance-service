@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -25,6 +26,6 @@ public class Document {
     private String name;
     private String type;
     private String encoding;
-    private String base64;
+    private UUID fileId;
 
 }
