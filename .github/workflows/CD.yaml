@@ -48,7 +48,6 @@ jobs:
           CLUSTER: ${{ inputs.cluster }}
         with:
           script: |
-            const {CLUSTER} = process.env
             console.log(`rg-${CLUSTER}`)
             return "hello"
 
