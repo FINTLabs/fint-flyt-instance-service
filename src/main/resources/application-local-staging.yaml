@@ -11,12 +11,14 @@ fint:
     default-replicas: 1
 spring:
   kafka:
-    bootstrap-servers: localhost:29092
+    bootstrap-servers: localhost:9092
   datasource:
     hikari:
       schema: fintlabs_no
     url: jdbc:postgresql://localhost:5433/fint-flyt-instance-service
     username: postgres
     password: password
+  webflux:
+    base-path: vlfk-no
 server:
   port: 8081

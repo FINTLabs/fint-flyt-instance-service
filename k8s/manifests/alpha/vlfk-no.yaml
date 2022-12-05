@@ -1,0 +1,97 @@
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: aiven-kafka
+spec:
+  itemPath: "vaults/aks-alpha-vault/items/aiven-kafka"
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: vlfk-no-fint-flyt-instance-service
+spec:
+  itemPath: "vaults/aks-alpha-vault/items/vlfk-no-fint-flyt-instance-service"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: fint-flyt-instance-service
+  name: fint-flyt-instance-service
+spec:
+  ports:
+    - port: 8080
+  type: ClusterIP
+  selector:
+    io.kompose.service: fint-flyt-instance-service
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: fint-flyt-instance-service
+  labels:
+    app: fint-flyt-instance-service
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`vlfk-no-skjema.vigoiks.no`) && PathPrefix(`/api/intern/handlinger/instanser`)
+      kind: Rule
+      services:
+        - name: fint-flyt-instance-service
+          port: 8080
+      middlewares:
+        - name: fint-flyt-auth-forward
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    io.kompose.service: fint-flyt-instance-service
+  name: fint-flyt-instance-service
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      io.kompose.service: fint-flyt-instance-service
+  template:
+    metadata:
+      labels:
+        io.kompose.service: fint-flyt-instance-service
+    spec:
+      restartPolicy: Always
+      volumes:
+        - name: credentials
+          secret:
+            secretName: aiven-kafka-certificates
+      containers:
+        - image: fintlabsacr.azurecr.io/fint-flyt-instance-service:dummy
+          name: fint-flyt-instance-service
+          volumeMounts:
+            - name: credentials
+              mountPath: /credentials
+          resources:
+            limits:
+              memory: "2048Mi"
+              cpu: "1"
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: aiven-kafka
+            - secretRef:
+                name: vlfk-no-fint-flyt-instance-service
+          env:
+            - { name: TZ, value: Europe/Oslo }
+            - { name: JAVA_TOOL_OPTIONS, value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M' }
+            - { name: fint.org-id, value: 'vlfk.no' }
+            - { name: spring.datasource.hikari.schema, value: 'vlfk_no' }
+            - { name: fint.flyt.resource-server.security.api.internal.enabled, value: 'true' }
+            - { name: fint.flyt.resource-server.security.api.internal.authorized-org-ids, value: 'vlfk.no, vigo.no' }
+            - { name: spring.webflux.base-path, value: 'vlfk-no' }
