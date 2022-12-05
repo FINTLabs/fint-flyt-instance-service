@@ -12,6 +12,9 @@ on:
           - alpha
           - beta
           - api
+      environment:
+        type: environment
+        description: Select the environment
 
 env:
   REGISTRY: ghcr.io
