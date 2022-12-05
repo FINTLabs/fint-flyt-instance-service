@@ -42,16 +42,16 @@ jobs:
   log-the-inputs:
     runs-on: ubuntu-latest
     steps:
-#        - uses: bhowell2/github-substring-action
-#          id: rg
-#          with:
-#            value: ${{ inputs.cluster }}
-#            length_from_end: 16
+      - uses: bhowell2/github-substring-action
+        id: rg
+        with:
+          value: ${{ inputs.cluster }}
+          length_from_end: 16
       - run: |
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: $RESOURCE_GROUP"
-#          env:
-#            RESOURCE_GROUP: rg-${{ steps.rg }}
+          env:
+            RESOURCE_GROUP: rg-${{ steps.rg }}
 
 #  cd:
 #    runs-on: ubuntu-latest
