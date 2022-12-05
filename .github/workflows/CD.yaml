@@ -53,7 +53,7 @@ jobs:
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: $RESOURCE_GROUP"
         env:
-          RESOURCE_GROUP: rg-${{ steps.rg.outputs.result }}
+          RESOURCE_GROUP: ${{ steps.rg.outputs.result }}
 
 #  cd:
 #    runs-on: ubuntu-latest
