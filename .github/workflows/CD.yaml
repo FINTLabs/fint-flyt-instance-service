@@ -45,7 +45,9 @@ jobs:
       - uses: actions/github-script@v6
         id: rg
         with:
-          script: return '${{ inputs.cluster }}'.substring(-16)
+          script: |
+            const a = '${{ inputs.cluster }}'.split('-')
+            return `rg-${a}[0]-${a}[1]`
           result-encoding: string
       - run: |
           echo "Cluster: $CLUSTER_NAME"
