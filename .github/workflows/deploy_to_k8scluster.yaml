@@ -37,14 +37,14 @@ jobs:
           cluster-name: ${{ env.ALPHA_CLUSTER_NAME }}
           resource-group: ${{ env.ALPHA_CLUSTER_RESOURCE_GROUP }}
 
-      - name: Deploy to alpha - viken.no
-        uses: azure/k8s-deploy@v3.0
-        with:
-          manifests: |
-            k8s/manifests/alpha/viken-no.yaml
-          images: |
-            ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
-          namespace: viken-no
+#      - name: Deploy to alpha - viken.no
+#        uses: azure/k8s-deploy@v3.0
+#        with:
+#          manifests: |
+#            k8s/manifests/alpha/viken-no.yaml
+#          images: |
+#            ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
+#          namespace: viken-no
 
       - name: Deploy to alpha - vlfk.no
         uses: azure/k8s-deploy@v3.0

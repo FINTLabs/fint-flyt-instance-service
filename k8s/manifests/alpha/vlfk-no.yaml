@@ -1,16 +1,34 @@
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
+apiVersion: "fintlabs.no/v1alpha1"
+kind: KafkaUserAndAcl
 metadata:
-  name: aiven-kafka
+  name: fint-flyt-instance-service
+  labels:
+    app.kubernetes.io/name: fint-flyt-instance-service
+    app.kubernetes.io/instance: fint-flyt-instance-service_vlfk-no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: fint-flyt
+    fintlabs.no/team: flyt
+    fintlabs.no/org-id: vlfk.no
 spec:
-  itemPath: "vaults/aks-alpha-vault/items/aiven-kafka"
+  acls:
+    - permission: admin
+      topic: 'vlfk-no.flyt.*'
 ---
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
+apiVersion: "fintlabs.no/v1alpha1"
+kind: PGSchemaAndUser
 metadata:
-  name: vlfk-no-fint-flyt-instance-service
+  name: fint-flyt-instance-service
+  labels:
+    app.kubernetes.io/name: fint-flyt-instance-service
+    app.kubernetes.io/instance: fint-flyt-instance-service_vlfk-no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: fint-flyt
+    fintlabs.no/team: flyt
+    fintlabs.no/org-id: vlfk.no
 spec:
-  itemPath: "vaults/aks-alpha-vault/items/vlfk-no-fint-flyt-instance-service"
+  databaseName: fint_flyt_instance_service
 ---
 apiVersion: v1
 kind: Service
@@ -66,7 +84,7 @@ spec:
       volumes:
         - name: credentials
           secret:
-            secretName: aiven-kafka-certificates
+            secretName: fint-flyt-instance-service-kafka-certificates
       containers:
         - image: fintlabsacr.azurecr.io/fint-flyt-instance-service:dummy
           name: fint-flyt-instance-service
@@ -84,7 +102,7 @@ spec:
             - containerPort: 8080
           envFrom:
             - secretRef:
-                name: aiven-kafka
+                name: fint-flyt-instance-service-kafka
             - secretRef:
                 name: vlfk-no-fint-flyt-instance-service
           env:
