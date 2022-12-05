@@ -45,7 +45,7 @@ jobs:
       - uses: actions/github-script@v6
         id: rg
         env:
-          CLUSTER: ${{CLUSTER_NAME}}
+          CLUSTER: ${{ inputs.cluster }}
         with:
           script: |
             const {CLUSTER} = process.env
