@@ -44,12 +44,9 @@ jobs:
     steps:
       - uses: actions/github-script@v6
         id: rg
-        env:
-          CLUSTER: ${{ inputs.cluster }}
         with:
           script: |
-            console.log(`rg-${CLUSTER}`)
-            return "hello"
+            return ${{ inputs.cluster }}
 
           result-encoding: string
       - run: |
