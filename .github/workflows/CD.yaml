@@ -48,8 +48,7 @@ jobs:
           CLUSTER: ${{env.CLUSTER_NAME}}
         with:
           script: |
-            const {CLUSTER} = process.env
-            console.log(`rg-${CLUSTER}`)
+
             return "hello"
 
           result-encoding: string
