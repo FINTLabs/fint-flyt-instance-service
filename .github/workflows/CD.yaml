@@ -9,9 +9,9 @@ on:
         default: 'warning'
         type: choice
         options:
-          - alpha
-          - beta
-          - api
+          - aks-alpha-fint-2021-11-18
+          - aks-beta-fint-2021-11-23
+          - aks-api-fint-2022-02-08
       org:
         description: 'Select organisation'
         required: true
@@ -29,46 +29,65 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  ALPHA_CLUSTER_NAME: aks-alpha-fint-2021-11-18
-  ALPHA_CLUSTER_RESOURCE_GROUP: rg-aks-alpha
-  BETA_CLUSTER_NAME: aks-beta-fint-2021-11-23
-  BETA_CLUSTER_RESOURCE_GROUP: rg-aks-beta
-  API_CLUSTER_NAME: aks-api-fint-2022-02-08
-  API_CLUSTER_RESOURCE_GROUP: rg-aks-api
+  CLUSTER_NAME: ${{ inputs.cluster }}
+
+#  ALPHA_CLUSTER_NAME: aks-alpha-fint-2021-11-18
+#  ALPHA_CLUSTER_RESOURCE_GROUP: rg-aks-alpha
+#  BETA_CLUSTER_NAME: aks-beta-fint-2021-11-23
+#  BETA_CLUSTER_RESOURCE_GROUP: rg-aks-beta
+#  API_CLUSTER_NAME: aks-api-fint-2022-02-08
+#  API_CLUSTER_RESOURCE_GROUP: rg-aks-api
 
 jobs:
-  cd:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+  jobs:
+    get-resource-group:
+      steps:
+        - uses: bhowell2/github-substring-action
+          id: four
+          with:
+            value: ${{ inputs.cluster }}
+            length_from_end: 16
+    log-the-inputs:
+      runs-on: ubuntu-latest
+      steps:
+        - run: |
+            echo "Cluster: $CLUSTER_NAME"
+            echo "Resource group: $RESOURCE_GROUP"
+          env:
+            RESOURCE_GROUP: rg-${{ steps.four }}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,enable=true,priority=100,prefix=sha-,suffix=,format=short
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v3.1.1
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+#  cd:
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#      packages: write
+#
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#
+#      - name: Log in to the Container registry
+#        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Extract metadata (tags, labels) for Docker
+#        id: meta
+#        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+#        with:
+#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+#          tags: |
+#            type=sha,enable=true,priority=100,prefix=sha-,suffix=,format=short
+#
+#      - name: Build and push Docker image
+#        uses: docker/build-push-action@v3.1.1
+#        with:
+#          context: .
+#          push: true
+#          tags: ${{ steps.meta.outputs.tags }}
+#          labels: ${{ steps.meta.outputs.labels }}
 
       ## Alpha cluster ##
 #      - name: Bake alpha manifests with Kustomize
