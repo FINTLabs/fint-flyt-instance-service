@@ -2,8 +2,8 @@ name: CD
 
 on:
   workflow_dispatch:
-    environment:
-      description: 'Environment'
+    cluster:
+      description: 'Cluster'
       required: true
       default: 'warning'
       type: choice
