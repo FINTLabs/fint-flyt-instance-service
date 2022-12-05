@@ -1,4 +1,4 @@
-name: Create and publish a Docker image
+name: CD
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ env:
   API_CLUSTER_RESOURCE_GROUP: rg-aks-api
 
 jobs:
-  build-and-push-image:
+  cd:
     runs-on: ubuntu-latest
     permissions:
       contents: read
