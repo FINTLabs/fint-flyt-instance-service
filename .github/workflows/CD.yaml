@@ -44,8 +44,14 @@ jobs:
     steps:
       - uses: actions/github-script@v6
         id: rg
+        env:
+          CLUSTER: ${{env.CLUSTER_NAME}}
         with:
-          script: return ${{env.CLUSTER_NAME}}.substring(-16)
+          script: |
+            const {CLUSTER} = process.env
+            console.log(`rg-${CLUSTER}`)
+            return "hello"
+
           result-encoding: string
       - run: |
           echo "Cluster: $CLUSTER_NAME"
