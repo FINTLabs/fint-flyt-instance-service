@@ -45,7 +45,7 @@ jobs:
       - uses: actions/github-script@v6
         id: rg
         with:
-          script: return '${{ inputs.cluster }}'
+          script: return JSON.stringify(${{ inputs.cluster }})
           result-encoding: string
       - run: |
           echo "Cluster: $CLUSTER_NAME"
