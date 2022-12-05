@@ -45,15 +45,13 @@ jobs:
       - uses: actions/github-script@v6
         id: rg
         with:
-          script: |
-            return '${{ inputs.cluster }}'
-
+          script: return '${{ inputs.cluster }}'
           result-encoding: string
       - run: |
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: $RESOURCE_GROUP"
-          env:
-            RESOURCE_GROUP: rg-${{ steps.rg }}
+        env:
+          RESOURCE_GROUP: rg-${{ steps.rg }}
 
 #  cd:
 #    runs-on: ubuntu-latest
