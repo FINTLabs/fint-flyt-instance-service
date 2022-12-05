@@ -46,7 +46,7 @@ jobs:
         id: rg
         with:
           script: |
-            return ${{ inputs.cluster }}
+            return '${{ inputs.cluster }}'
 
           result-encoding: string
       - run: |
