@@ -2,15 +2,16 @@ name: CD
 
 on:
   workflow_dispatch:
-    cluster:
-      description: 'Cluster'
-      required: true
-      default: 'warning'
-      type: choice
-      options:
-        - alpha
-        - beta
-        - api
+    inputs:
+      cluster:
+        description: 'Cluster'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - alpha
+          - beta
+          - api
 
 env:
   REGISTRY: ghcr.io
