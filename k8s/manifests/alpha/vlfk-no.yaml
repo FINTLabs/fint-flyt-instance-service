@@ -104,7 +104,7 @@ spec:
             - secretRef:
                 name: fint-flyt-instance-service-kafka
             - secretRef:
-                name: vlfk-no-fint-flyt-instance-service
+                name: fint-flyt-instance-service
           env:
             - { name: TZ, value: Europe/Oslo }
             - { name: JAVA_TOOL_OPTIONS, value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M' }
