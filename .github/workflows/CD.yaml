@@ -45,13 +45,13 @@ jobs:
       - uses: actions/github-script@v6
         id: rg
         with:
-          script: return JSON.stringify(${{ inputs.cluster }})
+          script: return ${{ inputs.cluster }}
           result-encoding: string
       - run: |
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: $RESOURCE_GROUP"
         env:
-          RESOURCE_GROUP: rg-${{ steps.rg }}
+          RESOURCE_GROUP: rg-${{ steps.rg.outputs.result }}
 
 #  cd:
 #    runs-on: ubuntu-latest
