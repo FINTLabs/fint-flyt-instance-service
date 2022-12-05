@@ -1,7 +1,7 @@
 name: deploy
 on:
-  repository_dispatch:
-    types: [trigger-to-deploy]
+ # repository_dispatch:
+ #   types: [trigger-to-deploy]
 
   workflow_dispatch:
 
