@@ -47,7 +47,7 @@ jobs:
         with:
           script: |
             const a = '${{ inputs.cluster }}'.split('-')
-            return `rg-${a}[0]-${a}[1]`
+            return `rg-${a[0]}-${a[1]}`
           result-encoding: string
       - run: |
           echo "Cluster: $CLUSTER_NAME"
