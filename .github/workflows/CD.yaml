@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       cluster:
-        description: 'Cluster'
+        description: 'Select and environment'
         required: true
         default: 'warning'
         type: choice
@@ -12,9 +12,19 @@ on:
           - alpha
           - beta
           - api
-      environment:
-        type: environment
-        description: Select the environment
+      org:
+        description: 'Select organisation'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - vlfk.no
+          - viken.no
+          - rogfk.no
+          - vtfk.no
+          - trondelagfk.no
+          - innlandet.no
+          - agderfk.no
 
 env:
   REGISTRY: ghcr.io
