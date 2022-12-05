@@ -46,7 +46,17 @@ jobs:
             ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
           namespace: viken-no
 
-## Update slack channel ##
+      - name: Deploy to alpha - vlfk.no
+        uses: azure/k8s-deploy@v3.0
+        with:
+          manifests: |
+            k8s/manifests/alpha/vlfk-no.yaml
+          images: |
+            ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
+          namespace: vlfk-no
+
+
+      ## Update slack channel ##
       - name: Update FINT slack channel
         uses: rtCamp/action-slack-notify@v2
         env:
