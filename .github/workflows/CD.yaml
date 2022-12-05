@@ -45,10 +45,11 @@ jobs:
       - uses: actions/github-script@v6
         id: rg
         env:
-          CLUSTER: ${{env.CLUSTER_NAME}}
+          CLUSTER: ${{CLUSTER_NAME}}
         with:
           script: |
-
+            const {CLUSTER} = process.env
+            console.log(`rg-${CLUSTER}`)
             return "hello"
 
           result-encoding: string
