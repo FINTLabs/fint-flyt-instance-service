@@ -109,7 +109,7 @@ spec:
             - { name: TZ, value: Europe/Oslo }
             - { name: JAVA_TOOL_OPTIONS, value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M' }
             - { name: fint.org-id, value: 'vlfk.no' }
-            - { name: spring.datasource.hikari.schema, value: 'vlfk_no' }
+            #- { name: spring.datasource.hikari.schema, value: 'vlfk_no' }
             - { name: fint.flyt.resource-server.security.api.internal.enabled, value: 'true' }
             - { name: fint.flyt.resource-server.security.api.internal.authorized-org-ids, value: 'vlfk.no, vigo.no' }
             - { name: spring.webflux.base-path, value: 'vlfk-no' }
