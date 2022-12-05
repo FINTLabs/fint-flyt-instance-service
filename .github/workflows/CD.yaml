@@ -42,11 +42,11 @@ jobs:
   log-the-inputs:
     runs-on: ubuntu-latest
     steps:
-      - uses: bhowell2/github-substring-action
+      - uses: actions/github-script@v6
         id: rg
         with:
-          value: ${{ inputs.cluster }}
-          length_from_end: 16
+          script: return $CLUSTER_NAME.substring(-16)
+          result-encoding: string
       - run: |
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: $RESOURCE_GROUP"
