@@ -57,13 +57,20 @@ jobs:
             const a = '${{ inputs.cluster }}'.split('-')
             return `${a[1]}`
           result-encoding: string
+      - uses: actions/github-script@v6
+        name: Get auth
+        id: auth
+        with:
+          script: |
+            return `secrets.AKS_${{ steps.environment.outputs.result }}_FINT_GITHUB`
+          result-encoding: string
 
       - run: |
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: ${{ steps.rg.outputs.result }}"
           echo "Environment: ${{ steps.environment.outputs.result }}"
           echo "OrgId: $ORG"
-          echo "${{ secrets.AKS_${{ steps.environment.outputs.result }}_FINT_GITHUB }}"
+          echo "${{ steps.auth.outputs.result }"
 
 #      - name: Checkout repository
 #        uses: actions/checkout@v3
