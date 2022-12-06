@@ -63,7 +63,7 @@ jobs:
         with:
           script: |
             const e = '${{ steps.environment.outputs.result }}'.toUpperCase()
-            return `secrets.AKS__FINT_GITHUB`
+            return `secrets.AKS_${e}_FINT_GITHUB`
           result-encoding: string
 
       - run: |
