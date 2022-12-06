@@ -4,7 +4,7 @@ metadata:
   name: fint-flyt-instance-service
 data:
   JAVA_TOOL_OPTIONS: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
-  fint.org-id, value: 'vlfk.no'
-  fint.flyt.resource-server.security.api.internal.enabled, value: 'true'
-  fint.flyt.resource-server.security.api.internal.authorized-org-ids, value: 'vlfk.no, vigo.no'
-  spring.webflux.base-path, value: 'vlfk-no'
+  fint.org-id: 'vlfk.no'
+  fint.flyt.resource-server.security.api.internal.enabled: 'true'
+  fint.flyt.resource-server.security.api.internal.authorized-org-ids: 'vlfk.no, vigo.no'
+  spring.webflux.base-path: 'vlfk-no'
