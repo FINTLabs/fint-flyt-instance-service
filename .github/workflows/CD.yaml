@@ -52,7 +52,7 @@ jobs:
         with:
           script: |
             const a = '${{ inputs.cluster }}'.split('-')
-            return `${a[0]}`
+            return `${a[1]}`
           result-encoding: string
 
       - run: |
