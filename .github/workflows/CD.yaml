@@ -101,7 +101,7 @@ jobs:
         uses: azure/k8s-bake@v2.2
         with:
           renderEngine: 'kustomize'
-          kustomizationPath: 'kustomize/overlays/${{ steps.environment.outputs.result }}'
+          kustomizationPath: 'kustomize/overlays/${{ env.ORG}}/${{ steps.environment.outputs.result }}'
         id: bake
 
       - name: Set the target to ${{ env.CLUSTER_NAME }} cluster.
