@@ -30,6 +30,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   CLUSTER_NAME: ${{ inputs.cluster }}
+  ORG: ${{ inputs.org }}
 
 jobs:
   cd:
@@ -59,6 +60,7 @@ jobs:
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: ${{ steps.rg.outputs.result }}"
           echo "Environment: ${{ steps.environment.outputs.result }}"
+          echo "OrgId: ${{ inputs.cluster }}"
 
 #      - name: Checkout repository
 #        uses: actions/checkout@v3
