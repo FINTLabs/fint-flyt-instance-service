@@ -71,8 +71,7 @@ jobs:
           echo "Resource group: ${{ steps.rg.outputs.result }}"
           echo "Environment: ${{ steps.environment.outputs.result }}"
           echo "OrgId: $ORG"
-          echo "${{ ${{ steps.auth.outputs.result }} }}"
-
+          echo ${{ secrets[format('AKS_{0}_FINT_GITHUB', steps.environment.outputs.result)] }}
 #      - name: Checkout repository
 #        uses: actions/checkout@v3
 #
