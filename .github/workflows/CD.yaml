@@ -62,7 +62,8 @@ jobs:
         id: auth
         with:
           script: |
-            return `secrets.AKS_${{ steps.environment.outputs.result }}_FINT_GITHUB`
+            const e = '${{ steps.environment.outputs.result }}'.toUpperCase()
+            return `secrets.AKS__FINT_GITHUB`
           result-encoding: string
 
       - run: |
