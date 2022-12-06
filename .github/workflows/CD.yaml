@@ -31,16 +31,13 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   CLUSTER_NAME: ${{ inputs.cluster }}
 
-#  ALPHA_CLUSTER_NAME: aks-alpha-fint-2021-11-18
-#  ALPHA_CLUSTER_RESOURCE_GROUP: rg-aks-alpha
-#  BETA_CLUSTER_NAME: aks-beta-fint-2021-11-23
-#  BETA_CLUSTER_RESOURCE_GROUP: rg-aks-beta
-#  API_CLUSTER_NAME: aks-api-fint-2022-02-08
-#  API_CLUSTER_RESOURCE_GROUP: rg-aks-api
-
 jobs:
-  log-the-inputs:
+  cd:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - uses: actions/github-script@v6
         id: rg
@@ -49,19 +46,20 @@ jobs:
             const a = '${{ inputs.cluster }}'.split('-')
             return `rg-${a[0]}-${a[1]}`
           result-encoding: string
+
+      - uses: actions/github-script@v6
+        id: environment
+        with:
+          script: |
+            const a = '${{ inputs.cluster }}'.split('-')
+            return `${a[0]}`
+          result-encoding: string
+
       - run: |
           echo "Cluster: $CLUSTER_NAME"
-          echo "Resource group: $RESOURCE_GROUP"
-        env:
-          RESOURCE_GROUP: ${{ steps.rg.outputs.result }}
+          echo "Resource group: ${{ steps.rg.outputs.result }}"
+          echo "Environment: ${{ steps.environment.outputs.result }}"
 
-#  cd:
-#    runs-on: ubuntu-latest
-#    permissions:
-#      contents: read
-#      packages: write
-#
-#    steps:
 #      - name: Checkout repository
 #        uses: actions/checkout@v3
 #
@@ -87,26 +85,25 @@ jobs:
 #          push: true
 #          tags: ${{ steps.meta.outputs.tags }}
 #          labels: ${{ steps.meta.outputs.labels }}
-
-      ## Alpha cluster ##
-#      - name: Bake alpha manifests with Kustomize
+#
+#      - name: Bake manifests with Kustomize
 #        uses: azure/k8s-bake@v2.2
 #        with:
 #          renderEngine: 'kustomize'
-#          kustomizationPath: 'kustomize/overlays/alpha'
-#        id: bake-alpha
+#          kustomizationPath: 'kustomize/overlays/${{ steps.environment.outputs.result }}'
+#        id: bake
 #
-#      - name: Set the target Alpha cluster.
+#      - name: Set the target to ${{ env.CLUSTER_NAME }} cluster.
 #        uses: azure/aks-set-context@v1
 #        with:
 #          creds: '${{ secrets.AKS_ALPHA_FINT_GITHUB }}'
-#          cluster-name: ${{ env.ALPHA_CLUSTER_NAME }}
-#          resource-group: ${{ env.ALPHA_CLUSTER_RESOURCE_GROUP }}
+#          cluster-name: ${{ env.CLUSTER_NAME }}
+#          resource-group: ${{ steps.rg.outputs.result }}
 #
-#      - name: Deploy to Alpha
+#      - name: Deploy to ${{ env.CLUSTER_NAME }}
 #        uses: azure/k8s-deploy@v4.4
 #        with:
-#          manifests: ${{ steps.bake-alpha.outputs.manifestsBundle }}
+#          manifests: ${{ steps.bake.outputs.manifestsBundle }}
 #          images: |
 #            ${{ steps.meta.outputs.tags }}
 #          namespace: operators
