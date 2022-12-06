@@ -60,7 +60,7 @@ jobs:
           echo "Cluster: $CLUSTER_NAME"
           echo "Resource group: ${{ steps.rg.outputs.result }}"
           echo "Environment: ${{ steps.environment.outputs.result }}"
-          echo "OrgId: ${{ inputs.cluster }}"
+          echo "OrgId: $ORG"
 
 #      - name: Checkout repository
 #        uses: actions/checkout@v3
