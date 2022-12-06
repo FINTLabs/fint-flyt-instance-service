@@ -18,13 +18,13 @@ on:
         default: 'warning'
         type: choice
         options:
-          - vlfk.no
-          - viken.no
-          - rogfk.no
-          - vtfk.no
-          - trondelagfk.no
-          - innlandet.no
-          - agderfk.no
+          - vlfk-no
+          - viken-no
+          - rogfk-no
+          - vtfk-no
+          - trondelagfk-no
+          - innlandet-no
+          - agderfk-no
 
 env:
   REGISTRY: ghcr.io
@@ -41,6 +41,7 @@ jobs:
 
     steps:
       - uses: actions/github-script@v6
+        name: Get resource group name
         id: rg
         with:
           script: |
@@ -49,6 +50,7 @@ jobs:
           result-encoding: string
 
       - uses: actions/github-script@v6
+        name: Get environment
         id: environment
         with:
           script: |
@@ -61,6 +63,7 @@ jobs:
           echo "Resource group: ${{ steps.rg.outputs.result }}"
           echo "Environment: ${{ steps.environment.outputs.result }}"
           echo "OrgId: $ORG"
+          echo "${{ secrets.AKS_${{ steps.environment.outputs.result }}_FINT_GITHUB }}"
 
 #      - name: Checkout repository
 #        uses: actions/checkout@v3
