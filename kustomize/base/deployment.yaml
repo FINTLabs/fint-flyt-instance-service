@@ -14,7 +14,7 @@ spec:
           secret:
             secretName: fint-flyt-instance-service-kafka-certificates
       containers:
-        - image: fintlabsacr.azurecr.io/fint-flyt-instance-service:dummy
+        - image: ghcr.io/fintlabs/fint-flyt-instance-service:sha-0000000
           name: fint-flyt-instance-service
           volumeMounts:
             - name: credentials
