@@ -13,8 +13,8 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     username: ${fint.database.username}
-    hikari:
-      schema: ${fint.database.schema}
+#    hikari:
+#      schema: ${fint.database.schema}
     url: ${fint.database.url}
     password: ${fint.database.password}
 
