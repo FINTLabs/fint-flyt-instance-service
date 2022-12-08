@@ -1,0 +1,4 @@
+apiVersion: "fintlabs.no/v1alpha1"
+kind: PGSDatabaseAndUser
+metadata:
+  name: fint-flyt-instance-service
