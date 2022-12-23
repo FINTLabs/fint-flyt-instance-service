@@ -25,7 +25,6 @@ on:
           - trondelagfk-no
           - innlandet-no
           - agderfk-no
-          - viken-test
 
 env:
   REGISTRY: ghcr.io
