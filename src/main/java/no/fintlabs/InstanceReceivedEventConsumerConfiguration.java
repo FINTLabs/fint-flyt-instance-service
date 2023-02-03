@@ -2,7 +2,7 @@ package no.fintlabs;
 
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventConsumerFactoryService;
 import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
-import no.fintlabs.model.instance.Instance;
+import no.fintlabs.model.instance.dtos.InstanceElementDto;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
@@ -11,17 +11,16 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 public class InstanceReceivedEventConsumerConfiguration {
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, Instance> instanceReceivedEventConsumer(
+    public ConcurrentMessageListenerContainer<String, InstanceElementDto> instanceReceivedEventConsumer(
             InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
-            InstanceRepository instanceRepository,
+            InstanceService instanceService,
             InstanceRegisteredEventProducerService instanceRegisteredEventProducerService,
             InstanceRegistrationErrorHandlerService instanceRegistrationErrorHandlerService
     ) {
         return instanceFlowEventConsumerFactoryService.createFactory(
-                Instance.class,
+                InstanceElementDto.class,
                 consumerRecord -> {
-                    Instance persistedInstance = instanceRepository.save(consumerRecord.getConsumerRecord().value());
-                    instanceRepository.flush();
+                    InstanceElementDto persistedInstance = instanceService.save(consumerRecord.getConsumerRecord().value());
                     instanceRegisteredEventProducerService.publish(
                             consumerRecord
                                     .getInstanceFlowHeaders()

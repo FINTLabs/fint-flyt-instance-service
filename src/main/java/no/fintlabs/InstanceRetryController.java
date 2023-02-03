@@ -1,7 +1,7 @@
 package no.fintlabs;
 
 import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
-import no.fintlabs.model.instance.Instance;
+import no.fintlabs.model.instance.dtos.InstanceElementDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,18 +19,18 @@ import static no.fintlabs.resourceserver.UrlPaths.INTERNAL_API;
 @RequestMapping(INTERNAL_API)
 public class InstanceRetryController {
 
-    private final InstanceRepository instanceRepository;
+    private final InstanceService instanceService;
     private final InstanceFlowHeadersForRegisteredInstanceRequestProducerService instanceFlowHeadersForRegisteredInstanceRequestProducerService;
     private final InstanceRequestedForRetryEventProducerService instanceRequestedForRetryEventProducerService;
     private final InstanceRetryRequestErrorEventProducerService instanceRetryRequestErrorEventProducerService;
 
     public InstanceRetryController(
-            InstanceRepository instanceRepository,
+            InstanceService instanceService,
             InstanceFlowHeadersForRegisteredInstanceRequestProducerService instanceFlowHeadersForRegisteredInstanceRequestProducerService,
             InstanceRequestedForRetryEventProducerService instanceRequestedForRetryEventProducerService,
             InstanceRetryRequestErrorEventProducerService instanceRetryRequestErrorEventProducerService
     ) {
-        this.instanceRepository = instanceRepository;
+        this.instanceService = instanceService;
         this.instanceFlowHeadersForRegisteredInstanceRequestProducerService = instanceFlowHeadersForRegisteredInstanceRequestProducerService;
         this.instanceRequestedForRetryEventProducerService = instanceRequestedForRetryEventProducerService;
         this.instanceRetryRequestErrorEventProducerService = instanceRetryRequestErrorEventProducerService;
@@ -40,7 +40,7 @@ public class InstanceRetryController {
     public ResponseEntity<?> retry(@PathVariable Long instanceId) {
         InstanceFlowHeaders instanceFlowHeaders = null;
         try {
-            Instance instance = instanceRepository.getById(instanceId);
+            InstanceElementDto instance = instanceService.getById(instanceId);
 
             instanceFlowHeaders = instanceFlowHeadersForRegisteredInstanceRequestProducerService
                     .get(instanceId)
