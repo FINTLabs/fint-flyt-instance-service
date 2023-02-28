@@ -1,7 +1,7 @@
 package no.fintlabs;
 
 import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
-import no.fintlabs.model.instance.dtos.InstanceElementDto;
+import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,7 +40,7 @@ public class InstanceRetryController {
     public ResponseEntity<?> retry(@PathVariable Long instanceId) {
         InstanceFlowHeaders instanceFlowHeaders = null;
         try {
-            InstanceElementDto instance = instanceService.getById(instanceId);
+            InstanceObjectDto instance = instanceService.getById(instanceId);
 
             instanceFlowHeaders = instanceFlowHeadersForRegisteredInstanceRequestProducerService
                     .get(instanceId)

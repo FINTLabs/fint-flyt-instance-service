@@ -7,29 +7,29 @@ import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducerRecord;
 import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
 import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
 import no.fintlabs.kafka.event.topic.EventTopicService;
-import no.fintlabs.model.instance.dtos.InstanceElementDto;
+import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 public class InstanceRegisteredEventProducerService {
 
-    private final InstanceFlowEventProducer<InstanceElementDto> newInstanceEventProducer;
+    private final InstanceFlowEventProducer<InstanceObjectDto> newInstanceEventProducer;
     private final EventTopicNameParameters topicNameParameters;
 
     public InstanceRegisteredEventProducerService(
             InstanceFlowEventProducerFactory instanceFlowEventProducerFactory,
             EventTopicService eventTopicService) {
-        this.newInstanceEventProducer = instanceFlowEventProducerFactory.createProducer(InstanceElementDto.class);
+        this.newInstanceEventProducer = instanceFlowEventProducerFactory.createProducer(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters.builder()
                 .eventName("instance-registered")
                 .build();
         eventTopicService.ensureTopic(topicNameParameters, 0);
     }
 
-    public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceElementDto instance) {
+    public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceObjectDto instance) {
         newInstanceEventProducer.send(
-                InstanceFlowEventProducerRecord.<InstanceElementDto>builder()
+                InstanceFlowEventProducerRecord.<InstanceObjectDto>builder()
                         .topicNameParameters(topicNameParameters)
                         .instanceFlowHeaders(instanceFlowHeaders)
                         .value(instance)
