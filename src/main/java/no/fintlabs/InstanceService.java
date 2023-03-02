@@ -1,28 +1,28 @@
 package no.fintlabs;
 
-import no.fintlabs.model.instance.InstanceMapperService;
-import no.fintlabs.model.instance.dtos.InstanceElementDto;
+import no.fintlabs.model.instance.InstanceMappingService;
+import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.stereotype.Service;
 
 @Service
 public class InstanceService {
 
     private final InstanceRepository instanceRepository;
-    private final InstanceMapperService instanceMapperService;
+    private final InstanceMappingService instanceMappingService;
 
-    public InstanceService(InstanceRepository instanceRepository, InstanceMapperService instanceMapperService) {
+    public InstanceService(InstanceRepository instanceRepository, InstanceMappingService instanceMappingService) {
         this.instanceRepository = instanceRepository;
-        this.instanceMapperService = instanceMapperService;
+        this.instanceMappingService = instanceMappingService;
     }
 
-    public InstanceElementDto save(InstanceElementDto instanceElementDto) {
-        return instanceMapperService.toInstanceElementDto(
-                instanceRepository.save(instanceMapperService.toInstanceElement(instanceElementDto))
+    public InstanceObjectDto save(InstanceObjectDto instanceObjectDto) {
+        return instanceMappingService.toInstanceObjectDto(
+                instanceRepository.save(instanceMappingService.toInstanceObject(instanceObjectDto))
         );
     }
 
-    public InstanceElementDto getById(Long instanceId) {
-        return instanceMapperService.toInstanceElementDto(instanceRepository.getById(instanceId));
+    public InstanceObjectDto getById(Long instanceId) {
+        return instanceMappingService.toInstanceObjectDto(instanceRepository.getById(instanceId));
     }
 
 }
