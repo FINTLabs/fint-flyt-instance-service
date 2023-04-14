@@ -5,4 +5,4 @@ metadata:
 data:
   fint.org-id: 'vlfk.no'
   fint.flyt.resource-server.security.api.internal.authorized-org-ids: 'vlfk.no, vigo.no'
-  spring.webflux.base-path: 'alpha/vlfk-no'
+  spring.webflux.base-path: 'beta/vlfk-no'

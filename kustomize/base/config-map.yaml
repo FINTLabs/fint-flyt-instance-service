@@ -3,4 +3,6 @@ kind: ConfigMap
 metadata:
   name: fint-flyt-instance-service
 data:
-  TZ: Europe/Oslo
+  TZ: 'Europe/Oslo'
+  JAVA_TOOL_OPTIONS: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
+  fint.flyt.resource-server.security.api.internal.enabled: 'true'
