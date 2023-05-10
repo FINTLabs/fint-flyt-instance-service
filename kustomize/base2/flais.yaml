@@ -29,7 +29,7 @@ spec:
   ingress:
     enabled: true
     basePath: path
-    middleware:
+    middlewares:
       - fint-flyt-auth-forward
   env:
     - name: JAVA_TOOL_OPTIONS
