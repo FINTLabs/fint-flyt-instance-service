@@ -1,0 +1,50 @@
+apiVersion: fintlabs.no/v1alpha1
+kind: Application
+metadata:
+  name: fint-flyt-instance-service
+  namespace: fintlabs-no
+  labels:
+    app.kubernetes.io/name: fint-flyt-instance-service
+    app.kubernetes.io/instance: fint-flyt-instance-service_fintlabs_no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: fint-flyt
+    fintlabs.no/team: flyt
+    fintlabs.no/org-id: fintlabs.no
+spec:
+  port: 8080
+  imagePullPolicy: Always
+  orgId: fintlabs.no
+  image: ghcr.io/fintlabs/fint-flyt-instance-service:sha-0000000
+  kafka:
+    enabled: true
+    acls:
+      - permission: admin
+        topic: 'no-permission'
+  database:
+    enabled: true
+  url:
+    hostname: flyt.vigoiks.no
+    basePath: path
+  ingress:
+    enabled: true
+    basePath: path
+    middleware:
+      - fint-flyt-auth-forward
+  env:
+    - name: JAVA_TOOL_OPTIONS
+      value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
+    - name: fint.flyt.resource-server.security.api.internal.authorized-org-ids
+      value: "vigo.no"
+  resources:
+    limits:
+      memory: "2048Mi"
+      cpu: "1"
+    requests:
+      memory: "512Mi"
+      cpu: "100m"
+  restartPolicy: Always
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
