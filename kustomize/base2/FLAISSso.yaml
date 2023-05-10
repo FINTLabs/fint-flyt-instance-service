@@ -1,0 +1,7 @@
+apiVersion: fintlabs.no/v1alpha1
+kind: FLAISSso
+metadata:
+  name: fint-flyt-instance-service
+spec:
+  hostname: flyt.vigoiks.no
+  basePath: path

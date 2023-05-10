@@ -5,14 +5,17 @@ namespace: trondelagfylke-no
 resources:
   - ../../../base2
 
+commonLabels:
+  app.kubernetes.io/name: fint-flyt-instance-service
+  app.kubernetes.io/instance: fint-flyt-instance-service_trondelagfylke_no
+  app.kubernetes.io/version: latest
+  app.kubernetes.io/component: backend
+  app.kubernetes.io/part-of: fint-flyt
+  fintlabs.no/team: flyt
+  fintlabs.no/org-id: trondelagfylke.no
+
 patches:
   - patch: |-
-      - op: replace
-        path: "/metadata/labels/app.kubernetes.io~1instance"
-        value: "fint-flyt-instance-service_trondelagfylke-no"
-      - op: replace
-        path: "/metadata/labels/fintlabs.no~1org-id"
-        value: "trondelagfylke.no"
       - op: replace
         path: "/spec/kafka/acls/0/topic"
         value: "trondelagfylke-no.flyt.*"
@@ -28,8 +31,15 @@ patches:
       - op: replace
         path: "/spec/env/1/value"
         value: "trondelagfylke.no, vigo.no"
-
     target:
       kind: Application
+      name: fint-flyt-instance-service
+
+  - patch: |-
+      - op: replace
+        path: "/spec/basePath"
+        value: "/trondelagfylke-no"
+    target:
+      kind: FLAISSso
       name: fint-flyt-instance-service
 

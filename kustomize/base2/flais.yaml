@@ -3,14 +3,6 @@ kind: Application
 metadata:
   name: fint-flyt-instance-service
   namespace: fintlabs-no
-  labels:
-    app.kubernetes.io/name: fint-flyt-instance-service
-    app.kubernetes.io/instance: fint-flyt-instance-service_fintlabs_no
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: fint-flyt
-    fintlabs.no/team: flyt
-    fintlabs.no/org-id: fintlabs.no
 spec:
   port: 8080
   imagePullPolicy: Always
@@ -30,7 +22,7 @@ spec:
     enabled: true
     basePath: path
     middlewares:
-      - fint-flyt-auth-forward
+      - fint-flyt-instance-service
   env:
     - name: JAVA_TOOL_OPTIONS
       value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
