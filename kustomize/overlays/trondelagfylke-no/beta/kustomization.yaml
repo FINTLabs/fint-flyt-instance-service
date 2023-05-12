@@ -30,11 +30,4 @@ patches:
       kind: Application
       name: fint-flyt-instance-service
 
-  - patch: |-
-      - op: replace
-        path: "/spec/basePath"
-        value: "/beta/trondelagfylke-no"
-    target:
-      kind: FLAISSso
-      name: fint-flyt-instance-service
 
