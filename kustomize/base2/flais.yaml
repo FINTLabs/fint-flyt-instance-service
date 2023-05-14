@@ -22,7 +22,7 @@ spec:
       - permission: admin
         topic: 'no-permission'
   database:
-    enabled: true
+    database: fint-flyt
   url:
     hostname: flyt.vigoiks.no
     basePath: path
