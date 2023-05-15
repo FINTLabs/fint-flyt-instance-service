@@ -36,6 +36,8 @@ spec:
       value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
     - name: fint.flyt.resource-server.security.api.internal.authorized-org-ids
       value: "vigo.no"
+    - name: fint.flyt.resource-server.security.api.internal.enabled
+      value: "true"
   resources:
     limits:
       memory: "2048Mi"
