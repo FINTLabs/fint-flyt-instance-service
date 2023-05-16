@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: fint-flyt-instance-service
-data:
-  fint.org-id: 'vlfk.no'
-  fint.flyt.resource-server.security.api.internal.authorized-org-ids: 'vlfk.no, vigo.no'
-  spring.webflux.base-path: 'vlfk-no'

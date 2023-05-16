@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: trondelagfylke-no
 
 resources:
-  - ../../../base2
+  - ../../../base
 
 commonLabels:
   app.kubernetes.io/instance: fint-flyt-instance-service_trondelagfylke_no

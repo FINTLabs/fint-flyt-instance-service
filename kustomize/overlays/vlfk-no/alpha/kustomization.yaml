@@ -1,31 +1,33 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: vlfk-no
+
 resources:
   - ../../../base
-patchesStrategicMerge:
-  - config-map.yaml
+
 commonLabels:
-  app.kubernetes.io/name: fint-flyt-instance-service
-  app.kubernetes.io/instance: fint-flyt-instance-service_vlfk-no
-  app.kubernetes.io/version: latest
-  app.kubernetes.io/component: backend
-  app.kubernetes.io/part-of: fint-flyt
-  fintlabs.no/team: flyt
+  app.kubernetes.io/instance: fint-flyt-instance-service_vlfk_no
   fintlabs.no/org-id: vlfk.no
+
 patches:
   - patch: |-
       - op: replace
-        path: "/spec/routes/0/match"
-        value: "Host(`flyt.vigoiks.no`) && PathPrefix(`/alpha/vlfk-no/api/intern/handlinger/instanser`)"
-    target:
-      kind: IngressRoute
-      name: fint-flyt-instance-service
-  - patch: |-
-      - op: replace
-        path: "/spec/acls/0/topic"
+        path: "/spec/kafka/acls/0/topic"
         value: "vlfk-no.flyt.*"
+      - op: replace
+        path: "/spec/orgId"
+        value: "vlfk.no"
+      - op: replace
+        path: "/spec/url/basePath"
+        value: "/alpha/vlfk-no"
+      - op: replace
+        path: "/spec/ingress/basePath"
+        value: "/alpha/vlfk-no/api/intern/handlinger/instanser"
+      - op: replace
+        path: "/spec/env/1/value"
+        value: "vlfk.no, vigo.no"
     target:
-      kind: KafkaUserAndAcl
+      kind: Application
       name: fint-flyt-instance-service
+
 
