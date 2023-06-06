@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '2.7.10'
+    id 'org.springframework.boot' version '2.6.5'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
     id 'groovy'
@@ -42,7 +42,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
 
-    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-core:8.0.5'
 
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'no.fintlabs:fint-kafka:2.3.0'
