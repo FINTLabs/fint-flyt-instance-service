@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: fintlabs-no
+
+resources:
+  - ../../../base
+
+commonLabels:
+  app.kubernetes.io/instance: fint-flyt-instance-service_fintlabs_no
+  fintlabs.no/org-id: fintlabs.no
+
+patches:
+  - patch: |-
+      - op: replace
+        path: "/spec/kafka/acls/0/topic"
+        value: "fintlabs-no.flyt.*"
+      - op: replace
+        path: "/spec/orgId"
+        value: "fintlabs.no"
+      - op: replace
+        path: "/spec/url/basePath"
+        value: "/beta/fintlabs-no"
+      - op: replace
+        path: "/spec/ingress/basePath"
+        value: "/beta/fintlabs-no/api/intern/handlinger/instanser"
+      - op: replace
+        path: "/spec/env/1/value"
+        value: "fintlabs.no, vigo.no"
+    target:
+      kind: Application
+      name: fint-flyt-instance-service
+
+
