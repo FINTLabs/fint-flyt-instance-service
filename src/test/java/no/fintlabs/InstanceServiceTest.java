@@ -61,10 +61,10 @@ public class InstanceServiceTest {
 
         Map<String, Collection<InstanceObjectDto>> objectCollectionPerKey = new HashMap<>();
 
-        InstanceObjectDto dto = InstanceObjectDto.builder().id(1L).valuePerKey(valuePerKey).objectCollectionPerKey(objectCollectionPerKey).build();
-        InstanceObject object = new InstanceObject(1L, valuePerKey, new HashMap<>());
-
         Long id = 1L;
+
+        InstanceObjectDto dto = InstanceObjectDto.builder().id(id).valuePerKey(valuePerKey).objectCollectionPerKey(objectCollectionPerKey).build();
+        InstanceObject object = new InstanceObject(id, valuePerKey, new HashMap<>());
 
         when(instanceRepository.getById(any())).thenReturn(object);
         when(instanceMappingService.toInstanceObjectDto(any())).thenReturn(dto);
