@@ -32,4 +32,9 @@ public class InstanceObject {
     @MapKeyColumn(name = "key")
     private Map<String, InstanceObjectCollection> objectCollectionPerKey;
 
+    @Override
+    public String toString() {
+        return "Sensitive data omitted";
+    }
+
 }
