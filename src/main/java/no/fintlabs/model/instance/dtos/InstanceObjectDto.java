@@ -24,9 +24,4 @@ public class InstanceObjectDto {
     @Builder.Default
     private Map<String, Collection<InstanceObjectDto>> objectCollectionPerKey = new HashMap<>();
 
-    @Override
-    public String toString() {
-        return "Sensitive data omitted";
-    }
-
 }

@@ -25,9 +25,4 @@ public class InstanceObjectCollection {
     @JoinColumn(name = "instance_object_collection_id")
     private Collection<InstanceObject> objects;
 
-    @Override
-    public String toString() {
-        return "Sensitive data omitted";
-    }
-
 }
