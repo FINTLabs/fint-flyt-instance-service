@@ -14,10 +14,9 @@ public class InstanceReceivedEventConsumerConfiguration {
     public ConcurrentMessageListenerContainer<String, InstanceObjectDto> instanceReceivedEventConsumer(
             InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
             InstanceService instanceService,
-            InstanceRegisteredEventProducerService instanceRegisteredEventProducerService,
-            InstanceRegistrationErrorHandlerService instanceRegistrationErrorHandlerService
+            InstanceRegisteredEventProducerService instanceRegisteredEventProducerService
     ) {
-        return instanceFlowEventConsumerFactoryService.createFactory(
+        return instanceFlowEventConsumerFactoryService.createRecordFactory(
                 InstanceObjectDto.class,
                 consumerRecord -> {
                     InstanceObjectDto persistedInstance = instanceService.save(consumerRecord.getConsumerRecord().value());
@@ -29,9 +28,7 @@ public class InstanceReceivedEventConsumerConfiguration {
                                     .build(),
                             persistedInstance
                     );
-                },
-                instanceRegistrationErrorHandlerService,
-                false
+                }
         ).createContainer(
                 EventTopicNameParameters.builder()
                         .eventName("instance-received")
