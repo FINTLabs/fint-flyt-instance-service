@@ -8,7 +8,6 @@ import java.util.Map;
 
 @Getter
 @Setter
-@EqualsAndHashCode
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
