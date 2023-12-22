@@ -1,31 +1,31 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: viken-no
+namespace: vestfoldfylke-no
 
 resources:
   - ../../../base
 
 commonLabels:
-  app.kubernetes.io/instance: fint-flyt-instance-service_viken_no
-  fintlabs.no/org-id: viken.no
+  app.kubernetes.io/instance: fint-flyt-instance-service_vestfoldfylke_no
+  fintlabs.no/org-id: vestfoldfylke.no
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "viken-no.flyt.*"
+        value: "vestfoldfylke-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "viken.no"
+        value: "vestfoldfylke.no"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/alpha/viken-no"
+        value: "/beta/vestfoldfylke-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/alpha/viken-no/api/intern/handlinger/instanser"
+        value: "/beta/vestfoldfylke-no/api/intern/handlinger/instanser"
       - op: replace
         path: "/spec/env/1/value"
-        value: "viken.no, vigo.no"
+        value: "vestfoldfylke.no, vigo.no"
     target:
       kind: Application
       name: fint-flyt-instance-service

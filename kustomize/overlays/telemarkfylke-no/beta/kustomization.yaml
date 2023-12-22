@@ -1,31 +1,31 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: innlandetfylke-no
+namespace: telemarkfylke-no
 
 resources:
   - ../../../base
 
 commonLabels:
-  app.kubernetes.io/instance: fint-flyt-instance-service_innlandetfylke_no
-  fintlabs.no/org-id: innlandetfylke.no
+  app.kubernetes.io/instance: fint-flyt-instance-service_telemarkfylke_no
+  fintlabs.no/org-id: telemarkfylke.no
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "innlandetfylke-no.flyt.*"
+        value: "telemarkfylke-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "innlandetfylke.no"
+        value: "telemarkfylke.no"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/alpha/innlandetfylke-no"
+        value: "/beta/telemarkfylke-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/alpha/innlandetfylke-no/api/intern/handlinger/instanser"
+        value: "/beta/telemarkfylke-no/api/intern/handlinger/instanser"
       - op: replace
         path: "/spec/env/1/value"
-        value: "innlandetfylke.no, vigo.no"
+        value: "telemarkfylke.no, vigo.no"
     target:
       kind: Application
       name: fint-flyt-instance-service

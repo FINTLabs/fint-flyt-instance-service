@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: afk-no
+
+resources:
+  - ../../../base
+
+commonLabels:
+  app.kubernetes.io/instance: fint-flyt-instance-service_afk_no
+  fintlabs.no/org-id: afk.no
+
+patches:
+  - patch: |-
+      - op: replace
+        path: "/spec/kafka/acls/0/topic"
+        value: "afk-no.flyt.*"
+      - op: replace
+        path: "/spec/orgId"
+        value: "afk.no"
+      - op: replace
+        path: "/spec/url/basePath"
+        value: "/beta/afk-no"
+      - op: replace
+        path: "/spec/ingress/basePath"
+        value: "/beta/afk-no/api/intern/handlinger/instanser"
+      - op: replace
+        path: "/spec/env/1/value"
+        value: "afk.no, vigo.no"
+    target:
+      kind: Application
+      name: fint-flyt-instance-service
+
+

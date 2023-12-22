@@ -1,31 +1,31 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: nfk-no
+namespace: afk-no
 
 resources:
   - ../../../base
 
 commonLabels:
-  app.kubernetes.io/instance: fint-flyt-instance-service_nfk_no
-  fintlabs.no/org-id: nfk.no
+  app.kubernetes.io/instance: fint-flyt-instance-service_afk_no
+  fintlabs.no/org-id: afk.no
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "nfk-no.flyt.*"
+        value: "afk-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "nfk.no"
+        value: "afk.no"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/alpha/nfk-no"
+        value: "/afk-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/alpha/nfk-no/api/intern/handlinger/instanser"
+        value: "/afk-no/api/intern/handlinger/instanser"
       - op: replace
         path: "/spec/env/1/value"
-        value: "nfk.no, vigo.no"
+        value: "afk.no, vigo.no"
     target:
       kind: Application
       name: fint-flyt-instance-service

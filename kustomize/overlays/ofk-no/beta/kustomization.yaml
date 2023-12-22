@@ -1,31 +1,31 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: mrfylke-no
+namespace: ofk-no
 
 resources:
   - ../../../base
 
 commonLabels:
-  app.kubernetes.io/instance: fint-flyt-instance-service_mrfylke_no
-  fintlabs.no/org-id: mrfylke.no
+  app.kubernetes.io/instance: fint-flyt-instance-service_ofk_no
+  fintlabs.no/org-id: ofk.no
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "mrfylke-no.flyt.*"
+        value: "ofk-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "mrfylke.no"
+        value: "ofk.no"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/alpha/mrfylke-no"
+        value: "/beta/ofk-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/alpha/mrfylke-no/api/intern/handlinger/instanser"
+        value: "/beta/ofk-no/api/intern/handlinger/instanser"
       - op: replace
         path: "/spec/env/1/value"
-        value: "mrfylke.no, vigo.no"
+        value: "ofk.no, vigo.no"
     target:
       kind: Application
       name: fint-flyt-instance-service
