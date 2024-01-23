@@ -25,7 +25,12 @@ patches:
         value: "/mrfylke-no/api/intern/handlinger/instanser"
       - op: replace
         path: "/spec/env/1/value"
-        value: "mrfylke.no, vigo.no"
+        value: |
+          {
+            "mrfylke.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
+            "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
+            "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
+          }
     target:
       kind: Application
       name: fint-flyt-instance-service

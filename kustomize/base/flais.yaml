@@ -34,8 +34,11 @@ spec:
   env:
     - name: JAVA_TOOL_OPTIONS
       value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
-    - name: fint.flyt.resource-server.security.api.internal.authorized-org-ids
-      value: "vigo.no"
+    - name: fint.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json
+      value: |
+        {
+          "fintlabs.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
+        }
     - name: fint.flyt.resource-server.security.api.internal.enabled
       value: "true"
   resources:
