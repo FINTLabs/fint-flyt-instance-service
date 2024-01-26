@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: rogfk-no
+
+resources:
+  - ../../../base
+
+commonLabels:
+  app.kubernetes.io/instance: fint-flyt-instance-service_rogfk_no
+  fintlabs.no/org-id: rogfk.no
+
+patches:
+  - patch: |-
+      - op: replace
+        path: "/spec/kafka/acls/0/topic"
+        value: "rogfk-no.flyt.*"
+      - op: replace
+        path: "/spec/orgId"
+        value: "rogfk.no"
+      - op: replace
+        path: "/spec/url/basePath"
+        value: "/rogfk-no"
+      - op: replace
+        path: "/spec/ingress/basePath"
+        value: "/rogfk-no/api/intern/handlinger/instanser"
+      - op: replace
+        path: "/spec/env/1/value"
+        value: |
+          {
+            "rogfk.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
+            "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
+            "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
+          }
+    target:
+      kind: Application
+      name: fint-flyt-instance-service
+
+

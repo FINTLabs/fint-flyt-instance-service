@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tromsfylke-no
+
+resources:
+  - ../../../base
+
+commonLabels:
+  app.kubernetes.io/instance: fint-flyt-instance-service_tromsfylke_no
+  fintlabs.no/org-id: tromsfylke.no
+
+patches:
+  - patch: |-
+      - op: replace
+        path: "/spec/kafka/acls/0/topic"
+        value: "tromsfylke-no.flyt.*"
+      - op: replace
+        path: "/spec/orgId"
+        value: "tromsfylke.no"
+      - op: replace
+        path: "/spec/url/basePath"
+        value: "/tromsfylke-no"
+      - op: replace
+        path: "/spec/ingress/basePath"
+        value: "/tromsfylke-no/api/intern/handlinger/instanser"
+      - op: replace
+        path: "/spec/env/1/value"
+        value: |
+          {
+            "tromsfylke.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
+            "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
+            "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
+          }
+    target:
+      kind: Application
+      name: fint-flyt-instance-service
+
+
