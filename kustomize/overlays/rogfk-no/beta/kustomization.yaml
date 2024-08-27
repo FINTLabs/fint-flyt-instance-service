@@ -1,33 +1,33 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: telemarkfylke-no
+namespace: rogfk-no
 
 resources:
   - ../../../base
 
 commonLabels:
-  app.kubernetes.io/instance: fint-flyt-instance-service_telemarkfylke_no
-  fintlabs.no/org-id: telemarkfylke.no
+  app.kubernetes.io/instance: fint-flyt-instance-service_rogfk_no
+  fintlabs.no/org-id: rogfk.no
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "telemarkfylke-no.flyt.*"
+        value: "rogfk-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "telemarkfylke.no"
+        value: "rogfk.no"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/beta/telemarkfylke-no"
+        value: "/beta/rogfk-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/beta/telemarkfylke-no/api/intern/handlinger/instanser"
+        value: "/beta/rogfk-no/api/intern/handlinger/instanser"
       - op: replace
         path: "/spec/env/1/value"
         value: |
           {
-            "telemarkfylke.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
+            "rogfk.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
             "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
             "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
           }
