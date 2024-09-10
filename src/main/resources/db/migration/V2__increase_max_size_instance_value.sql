@@ -1,0 +1,1 @@
+alter table instance_object_value_per_key alter column value type TEXT;
