@@ -1,6 +1,9 @@
 package no.fintlabs;
 
 import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
+import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
+import no.fintlabs.kafka.InstanceRequestedForRetryEventProducerService;
+import no.fintlabs.kafka.InstanceRetryRequestErrorEventProducerService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

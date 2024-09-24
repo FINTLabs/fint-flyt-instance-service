@@ -1,6 +1,5 @@
-package no.fintlabs;
+package no.fintlabs.kafka;
 
-import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducer;
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducerFactory;
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducerRecord;
@@ -10,20 +9,18 @@ import no.fintlabs.kafka.event.topic.EventTopicService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
-public class InstanceDeletedEventProducerService {
+public class InstanceRequestedForRetryEventProducerService {
 
     private final InstanceFlowEventProducer<InstanceObjectDto> newInstanceEventProducer;
     private final EventTopicNameParameters topicNameParameters;
 
-    public InstanceDeletedEventProducerService(
+    public InstanceRequestedForRetryEventProducerService(
             InstanceFlowEventProducerFactory instanceFlowEventProducerFactory,
-            EventTopicService eventTopicService
-    ) {
+            EventTopicService eventTopicService) {
         this.newInstanceEventProducer = instanceFlowEventProducerFactory.createProducer(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters.builder()
-                .eventName("instance-deleted")
+                .eventName("instance-requested-for-retry")
                 .build();
         eventTopicService.ensureTopic(topicNameParameters, 0);
     }

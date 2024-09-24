@@ -1,5 +1,6 @@
-package no.fintlabs;
+package no.fintlabs.kafka;
 
+import no.fintlabs.InstanceService;
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventConsumerFactoryService;
 import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
