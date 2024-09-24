@@ -6,8 +6,6 @@ import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
-
 @Service
 public class InstanceService {
 
@@ -35,7 +33,6 @@ public class InstanceService {
         return instanceMappingService.toInstanceObjectDto(instanceRepository.getReferenceById(instanceId));
     }
 
-    @Transactional
     public void deleteInstanceByInstanceFlowHeaders(InstanceFlowHeaders instanceFlowHeaders) {
         instanceRepository.deleteById(instanceFlowHeaders.getInstanceId());
         instanceDeletedEventProducerService.publish(instanceFlowHeaders);
