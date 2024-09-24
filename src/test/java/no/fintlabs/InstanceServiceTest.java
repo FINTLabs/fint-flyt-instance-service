@@ -1,5 +1,6 @@
 package no.fintlabs;
 
+import no.fintlabs.kafka.InstanceDeletedEventProducerService;
 import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import no.fintlabs.model.instance.entities.InstanceObject;
@@ -21,12 +22,19 @@ public class InstanceServiceTest {
     @Mock
     private InstanceMappingService instanceMappingService;
 
+    @Mock
+    private InstanceDeletedEventProducerService instanceDeletedEventProducerService;
+
     private InstanceService instanceService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        instanceService = new InstanceService(instanceRepository, instanceMappingService);
+        instanceService = new InstanceService(
+                instanceRepository,
+                instanceMappingService,
+                instanceDeletedEventProducerService
+        );
     }
 
     @Test
@@ -66,14 +74,14 @@ public class InstanceServiceTest {
         InstanceObjectDto dto = InstanceObjectDto.builder().id(id).valuePerKey(valuePerKey).objectCollectionPerKey(objectCollectionPerKey).build();
         InstanceObject object = new InstanceObject(id, valuePerKey, new HashMap<>());
 
-        when(instanceRepository.getById(any())).thenReturn(object);
+        when(instanceRepository.getReferenceById(any())).thenReturn(object);
         when(instanceMappingService.toInstanceObjectDto(any())).thenReturn(dto);
 
         InstanceObjectDto result = instanceService.getById(id);
 
         assertEquals(dto, result);
 
-        verify(instanceRepository, times(1)).getById(id);
+        verify(instanceRepository, times(1)).getReferenceById(id);
         verify(instanceMappingService, times(1)).toInstanceObjectDto(object);
     }
 }
