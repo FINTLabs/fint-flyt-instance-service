@@ -30,7 +30,7 @@ public class InstanceDeletedEventProducerService {
 
     public void publish(InstanceFlowHeaders instanceFlowHeaders) {
 
-        log.info("File UUIDs published to intance-deleted: {}", instanceFlowHeaders.getFileIds().toString());
+        log.info("File UUIDs published to intance-deleted topic: {}", instanceFlowHeaders.getFileIds().toString());
 
         newInstanceEventProducer.send(
                 InstanceFlowEventProducerRecord.<InstanceObjectDto>builder()

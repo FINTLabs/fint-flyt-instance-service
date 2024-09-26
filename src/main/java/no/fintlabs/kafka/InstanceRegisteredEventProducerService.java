@@ -28,9 +28,6 @@ public class InstanceRegisteredEventProducerService {
     }
 
     public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceObjectDto instance) {
-
-        log.info("File UUIDs stored in instance-flow-headers: {}", instanceFlowHeaders.getFileIds().toString());
-
         newInstanceEventProducer.send(
                 InstanceFlowEventProducerRecord.<InstanceObjectDto>builder()
                         .topicNameParameters(topicNameParameters)
