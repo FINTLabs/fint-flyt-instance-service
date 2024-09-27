@@ -19,7 +19,7 @@ public class InstanceDispatchedConsumerConfiguration {
             InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
             InstanceService instanceService) {
         EventTopicNameParameters topic = EventTopicNameParameters.builder()
-                .eventName("instance-registered")
+                .eventName("instance-dispatched")
                 .build();
 
         return instanceFlowEventConsumerFactoryService.createRecordFactory(
