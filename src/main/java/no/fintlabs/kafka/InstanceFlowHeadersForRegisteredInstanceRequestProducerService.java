@@ -1,4 +1,4 @@
-package no.fintlabs;
+package no.fintlabs.kafka;
 
 import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
 import no.fintlabs.kafka.common.topic.TopicCleanupPolicyParameters;

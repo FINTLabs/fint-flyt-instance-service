@@ -1,4 +1,4 @@
-package no.fintlabs;
+package no.fintlabs.kafka;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducer;
@@ -12,27 +12,28 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class InstanceRegisteredEventProducerService {
+public class InstanceDeletedEventProducerService {
 
     private final InstanceFlowEventProducer<InstanceObjectDto> newInstanceEventProducer;
     private final EventTopicNameParameters topicNameParameters;
 
-    public InstanceRegisteredEventProducerService(
+    public InstanceDeletedEventProducerService(
             InstanceFlowEventProducerFactory instanceFlowEventProducerFactory,
-            EventTopicService eventTopicService) {
+            EventTopicService eventTopicService
+    ) {
         this.newInstanceEventProducer = instanceFlowEventProducerFactory.createProducer(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters.builder()
-                .eventName("instance-registered")
+                .eventName("instance-deleted")
                 .build();
         eventTopicService.ensureTopic(topicNameParameters, 0);
     }
 
-    public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceObjectDto instance) {
+    public void publish(InstanceFlowHeaders instanceFlowHeaders) {
         newInstanceEventProducer.send(
                 InstanceFlowEventProducerRecord.<InstanceObjectDto>builder()
                         .topicNameParameters(topicNameParameters)
                         .instanceFlowHeaders(instanceFlowHeaders)
-                        .value(instance)
+                        .value(null)
                         .build()
         );
     }
