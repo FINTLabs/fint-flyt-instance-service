@@ -57,11 +57,11 @@ public class InstanceService {
         this.getAllOlderThan(days).forEach(instance -> instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
                 .ifPresentOrElse(
                         instanceFlowHeaders -> {
-                            instanceFlowHeaders.toBuilder()
+                            InstanceFlowHeaders updatedInstanceFlowHeaders = instanceFlowHeaders.toBuilder()
                                     .correlationId(UUID.randomUUID())
                                     .build();
-                            this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
-                            logDeletedInstance(instanceFlowHeaders.getInstanceId());
+                            this.deleteInstanceByInstanceFlowHeaders(updatedInstanceFlowHeaders);
+                            logDeletedInstance(updatedInstanceFlowHeaders.getInstanceId());
                         },
                         () -> {
                             log.warn("No instance flow headers found for instance with id={}", instance.getId());
