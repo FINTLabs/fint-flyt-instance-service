@@ -1,6 +1,7 @@
 package no.fintlabs;
 
 import no.fintlabs.kafka.InstanceDeletedEventProducerService;
+import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import no.fintlabs.model.instance.entities.InstanceObject;
@@ -25,6 +26,9 @@ public class InstanceServiceTest {
     @Mock
     private InstanceDeletedEventProducerService instanceDeletedEventProducerService;
 
+    @Mock
+    private InstanceFlowHeadersForRegisteredInstanceRequestProducerService instanceFlowHeadersForRegisteredInstanceRequestProducerService;
+
     private InstanceService instanceService;
 
     @BeforeEach
@@ -33,7 +37,8 @@ public class InstanceServiceTest {
         instanceService = new InstanceService(
                 instanceRepository,
                 instanceMappingService,
-                instanceDeletedEventProducerService
+                instanceDeletedEventProducerService,
+                instanceFlowHeadersForRegisteredInstanceRequestProducerService
         );
     }
 
