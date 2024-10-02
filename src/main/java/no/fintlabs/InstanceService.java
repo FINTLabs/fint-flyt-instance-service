@@ -57,13 +57,17 @@ public class InstanceService {
         this.getAllOlderThan(days).forEach(instance -> instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
                 .ifPresentOrElse(
                         instanceFlowHeaders -> {
-                            InstanceFlowHeaders updatedInstanceFlowHeaders = instanceFlowHeaders.toBuilder()
+                            instanceFlowHeaders.toBuilder()
                                     .correlationId(UUID.randomUUID())
                                     .build();
-                            this.deleteInstanceByInstanceFlowHeaders(updatedInstanceFlowHeaders);
-                            logDeletedInstance(instance);
+                            this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
+                            logDeletedInstance(instanceFlowHeaders.getInstanceId());
                         },
-                        () -> log.warn("No instance flow headers found for instance with id={}", instance.getId())
+                        () -> {
+                            log.warn("No instance flow headers found for instance with id={}", instance.getId());
+                            instanceRepository.deleteById(instance.getId());
+                            logDeletedInstance(instance.getId());
+                        }
                 ));
     }
 
@@ -73,8 +77,8 @@ public class InstanceService {
         instanceDeletedEventProducerService.publish(instanceFlowHeaders);
     }
 
-    private void logDeletedInstance(InstanceObjectDto instanceObject) {
-        log.info("Instance with id={}, timestamp={} deleted", instanceObject.getId(), instanceObject.getCreatedAt());
+    private void logDeletedInstance(Long instanceId) {
+        log.info("Instance with id={} deleted", instanceId);
     }
 
 }
