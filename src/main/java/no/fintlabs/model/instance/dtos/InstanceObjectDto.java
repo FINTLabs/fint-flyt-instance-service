@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.extern.jackson.Jacksonized;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,4 +25,5 @@ public class InstanceObjectDto {
     @Builder.Default
     private Map<String, Collection<InstanceObjectDto>> objectCollectionPerKey = new HashMap<>();
 
+    private Date createdAt;
 }
