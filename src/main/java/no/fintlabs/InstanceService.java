@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -57,16 +56,15 @@ public class InstanceService {
         this.getAllOlderThan(days).forEach(instance -> instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
                 .ifPresentOrElse(
                         instanceFlowHeaders -> {
-                            InstanceFlowHeaders updatedInstanceFlowHeaders = instanceFlowHeaders.toBuilder()
-                                    .correlationId(UUID.randomUUID())
-                                    .build();
-                            this.deleteInstanceByInstanceFlowHeaders(updatedInstanceFlowHeaders);
-                            logDeletedInstance(updatedInstanceFlowHeaders.getInstanceId());
+                            this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
+                            logDeletedInstance(instanceFlowHeaders.getInstanceId());
                         },
                         () -> {
                             log.warn("No instance flow headers found for instance with id={}", instance.getId());
-                            instanceRepository.deleteById(instance.getId());
-                            logDeletedInstance(instance.getId());
+                            if (instanceRepository.existsById(instance.getId())) {
+                                instanceRepository.deleteById(instance.getId());
+                                logDeletedInstance(instance.getId());
+                            }
                         }
                 ));
     }
