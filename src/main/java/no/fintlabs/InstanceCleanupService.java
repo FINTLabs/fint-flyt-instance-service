@@ -18,10 +18,8 @@ public class InstanceCleanupService {
 
     @Scheduled(initialDelay = 1000, fixedDelay = 86400000)
     public void cleanUp() {
-
         log.info("Cleaning up instances older than {} days", timeToKeepInstancesInDays);
         instanceService.deleteAllOlderThan(timeToKeepInstancesInDays);
-
     }
 }
 
