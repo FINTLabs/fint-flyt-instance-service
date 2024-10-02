@@ -12,7 +12,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
@@ -55,28 +54,17 @@ public class InstanceService {
     }
 
     public void deleteAllOlderThan(int days) {
-        this.getAllOlderThan(days).forEach(instance -> {
-            AtomicBoolean isDeleted = new AtomicBoolean(false);
-
-            instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
-                    .ifPresentOrElse(
-                            instanceFlowHeaders -> {
-                                InstanceFlowHeaders updatedInstanceFlowHeaders = instanceFlowHeaders.toBuilder()
-                                        .correlationId(UUID.randomUUID())
-                                        .build();
-                                this.deleteInstanceByInstanceFlowHeaders(updatedInstanceFlowHeaders);
-                                logDeletedInstance(instance);
-                                isDeleted.set(true);
-                            },
-                            () -> {
-                                log.warn("No instance flow headers found for instance with id={}", instance.getId());
-                                if (!isDeleted.get()) {
-                                    instanceRepository.deleteById(instance.getId());
-                                    logDeletedInstance(instance);
-                                }
-                            }
-                    );
-        });
+        this.getAllOlderThan(days).forEach(instance -> instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
+                .ifPresentOrElse(
+                        instanceFlowHeaders -> {
+                            InstanceFlowHeaders updatedInstanceFlowHeaders = instanceFlowHeaders.toBuilder()
+                                    .correlationId(UUID.randomUUID())
+                                    .build();
+                            this.deleteInstanceByInstanceFlowHeaders(updatedInstanceFlowHeaders);
+                            logDeletedInstance(instance);
+                        },
+                        () -> log.warn("No instance flow headers found for instance with id={}", instance.getId())
+                ));
     }
 
 
