@@ -46,7 +46,7 @@ public class InstanceServiceTest {
         Map<String, Collection<InstanceObjectDto>> objectCollectionPerKey = new HashMap<>();
 
         InstanceObjectDto dto = InstanceObjectDto.builder().id(1L).valuePerKey(valuePerKey).objectCollectionPerKey(objectCollectionPerKey).build();
-        InstanceObject object = new InstanceObject(1L, valuePerKey, new HashMap<>());
+        InstanceObject object = new InstanceObject(1L, valuePerKey, new HashMap<>(), new Date());
 
         when(instanceMappingService.toInstanceObject(any())).thenReturn(object);
         when(instanceRepository.save(any())).thenReturn(object);
@@ -72,7 +72,7 @@ public class InstanceServiceTest {
         Long id = 1L;
 
         InstanceObjectDto dto = InstanceObjectDto.builder().id(id).valuePerKey(valuePerKey).objectCollectionPerKey(objectCollectionPerKey).build();
-        InstanceObject object = new InstanceObject(id, valuePerKey, new HashMap<>());
+        InstanceObject object = new InstanceObject(id, valuePerKey, new HashMap<>(), new Date());
 
         when(instanceRepository.getReferenceById(any())).thenReturn(object);
         when(instanceMappingService.toInstanceObjectDto(any())).thenReturn(dto);

@@ -6,10 +6,7 @@ import no.fintlabs.model.instance.entities.InstanceObjectCollection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -49,10 +46,10 @@ public class InstanceMappingServiceTest {
         valuePerKey.put("key2", "value2");
 
         Map<String, InstanceObjectCollection> objectCollectionPerKey = new HashMap<>();
-        objectCollectionPerKey.put("key1", new InstanceObjectCollection(1L, List.of(new InstanceObject(1L, valuePerKey, new HashMap<>()))));
-        objectCollectionPerKey.put("key2", new InstanceObjectCollection(2L, List.of(new InstanceObject(2L, valuePerKey, new HashMap<>()))));
+        objectCollectionPerKey.put("key1", new InstanceObjectCollection(1L, List.of(new InstanceObject(1L, valuePerKey, new HashMap<>(), new Date()))));
+        objectCollectionPerKey.put("key2", new InstanceObjectCollection(2L, List.of(new InstanceObject(2L, valuePerKey, new HashMap<>(), new Date()))));
 
-        InstanceObject object = new InstanceObject(1L, valuePerKey, objectCollectionPerKey);
+        InstanceObject object = new InstanceObject(1L, valuePerKey, objectCollectionPerKey, new Date());
 
         InstanceObjectDto result = instanceMappingService.toInstanceObjectDto(object);
 

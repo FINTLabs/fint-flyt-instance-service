@@ -2,9 +2,11 @@ package no.fintlabs.model.instance.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.Map;
 
 @Getter
@@ -32,5 +34,10 @@ public class InstanceObject {
     @JoinColumn(name = "instance_object_id")
     @MapKeyColumn(name = "key")
     private Map<String, InstanceObjectCollection> objectCollectionPerKey;
+
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false, updatable = false)
+    private Date createdAt;
 
 }
