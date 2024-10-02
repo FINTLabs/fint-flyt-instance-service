@@ -76,7 +76,6 @@ public class InstanceService {
                 ));
     }
 
-
     public void deleteInstanceByInstanceFlowHeaders(InstanceFlowHeaders instanceFlowHeaders) {
         instanceRepository.deleteById(instanceFlowHeaders.getInstanceId());
         instanceDeletedEventProducerService.publish(instanceFlowHeaders);
