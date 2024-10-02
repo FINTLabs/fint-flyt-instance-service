@@ -6,7 +6,6 @@ import no.fintlabs.kafka.InstanceDeletedEventProducerService;
 import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
-import no.fintlabs.model.instance.entities.InstanceObject;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -55,22 +54,20 @@ public class InstanceService {
     }
 
     public void deleteAllOlderThan(int days) {
-        this.getAllOlderThan(days).forEach(instance -> {
-            instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
-                    .ifPresentOrElse(
-                            instanceFlowHeaders -> {
-                                instanceFlowHeaders.toBuilder()
-                                        .correlationId(UUID.randomUUID());
-                                this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
-                                logDeletedInstance(instance);
-                            },
-                            () -> {
-                                log.warn("No instance flow headers found for instance with id={}", instance.getId());
-                                instanceRepository.deleteById(instance.getId());
-                                logDeletedInstance(instance);
-                            }
-                    );
-        });
+        this.getAllOlderThan(days).forEach(instance -> instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
+                .ifPresentOrElse(
+                        instanceFlowHeaders -> {
+                            instanceFlowHeaders.toBuilder()
+                                    .correlationId(UUID.randomUUID());
+                            this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
+                            logDeletedInstance(instance);
+                        },
+                        () -> {
+                            log.warn("No instance flow headers found for instance with id={}", instance.getId());
+                            instanceRepository.deleteById(instance.getId());
+                            logDeletedInstance(instance);
+                        }
+                ));
     }
 
     public void deleteInstanceByInstanceFlowHeaders(InstanceFlowHeaders instanceFlowHeaders) {
