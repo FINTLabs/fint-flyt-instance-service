@@ -6,6 +6,7 @@ import no.fintlabs.kafka.InstanceDeletedEventProducerService;
 import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
+import no.fintlabs.model.instance.entities.InstanceObject;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -55,22 +56,30 @@ public class InstanceService {
 
     public void deleteAllOlderThan(int days) {
         this.getAllOlderThan(days).forEach(instance -> {
-            InstanceFlowHeaders instanceFlowHeaders = instanceFlowHeadersForRegisteredInstanceRequestProducerService
-                    .get(instance.getId())
-                    .map(ifh -> ifh.toBuilder()
-                            .correlationId(UUID.randomUUID())
-                            .build()
-                    )
-                    .orElseThrow(() -> new NoInstanceFlowHeadersException(instance.getId()));
-
-            this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
+            instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
+                    .ifPresentOrElse(
+                            instanceFlowHeaders -> {
+                                instanceFlowHeaders.toBuilder()
+                                        .correlationId(UUID.randomUUID());
+                                this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
+                                logDeletedInstance(instance);
+                            },
+                            () -> {
+                                log.warn("No instance flow headers found for instance with id={}", instance.getId());
+                                instanceRepository.deleteById(instance.getId());
+                                logDeletedInstance(instance);
+                            }
+                    );
         });
     }
 
     public void deleteInstanceByInstanceFlowHeaders(InstanceFlowHeaders instanceFlowHeaders) {
         instanceRepository.deleteById(instanceFlowHeaders.getInstanceId());
         instanceDeletedEventProducerService.publish(instanceFlowHeaders);
-        log.info("Instance with id={}, timestamp={} deleted", instanceFlowHeaders.getInstanceId(), Timestamp.valueOf(LocalDateTime.now()));
+    }
+
+    private void logDeletedInstance(InstanceObjectDto instanceObject) {
+        log.info("Instance with id={}, timestamp={} deleted", instanceObject.getId(), instanceObject.getCreatedAt());
     }
 
 }
