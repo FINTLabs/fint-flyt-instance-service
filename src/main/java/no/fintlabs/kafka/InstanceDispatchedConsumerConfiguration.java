@@ -13,21 +13,21 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 @Slf4j
 public class InstanceDispatchedConsumerConfiguration {
 
-//    @Bean
-//    public ConcurrentMessageListenerContainer<String, InstanceObjectDto>
-//    instanceRegisteredConsumer(
-//            InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
-//            InstanceService instanceService) {
-//        EventTopicNameParameters topic = EventTopicNameParameters.builder()
-//                .eventName("instance-dispatched")
-//                .build();
-//
-//        return instanceFlowEventConsumerFactoryService.createRecordFactory(
-//                InstanceObjectDto.class,
-//                instanceFlowConsumerRecord -> instanceService.deleteInstanceByInstanceFlowHeaders(
-//                        instanceFlowConsumerRecord.getInstanceFlowHeaders()
-//                )
-//        ).createContainer(topic);
-//    }
+    @Bean
+    public ConcurrentMessageListenerContainer<String, InstanceObjectDto>
+    instanceRegisteredConsumer(
+            InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
+            InstanceService instanceService) {
+        EventTopicNameParameters topic = EventTopicNameParameters.builder()
+                .eventName("instance-dispatched")
+                .build();
+
+        return instanceFlowEventConsumerFactoryService.createRecordFactory(
+                InstanceObjectDto.class,
+                instanceFlowConsumerRecord -> instanceService.deleteInstanceByInstanceFlowHeaders(
+                        instanceFlowConsumerRecord.getInstanceFlowHeaders()
+                )
+        ).createContainer(topic);
+    }
 
 }

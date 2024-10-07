@@ -6,7 +6,6 @@ import no.fintlabs.kafka.InstanceDeletedEventProducerService;
 import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -46,7 +45,7 @@ public class InstanceService {
 
     public List<InstanceObjectDto> getAllOlderThan(int days) {
         LocalDateTime thresholdDate = LocalDateTime.now().minusDays(days);
-        Timestamp timestamp = Timestamp.valueOf(thresholdDate);  // Convert LocalDateTime to Timestamp
+        Timestamp timestamp = Timestamp.valueOf(thresholdDate);
 
         return instanceRepository.findAllOlderThan(timestamp).stream()
                 .map(instanceMappingService::toInstanceObjectDto)
@@ -54,7 +53,8 @@ public class InstanceService {
     }
 
     public void deleteAllOlderThan(int days) {
-        this.getAllOlderThan(days).forEach(instance -> instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instance.getId())
+        this.getAllOlderThan(days).forEach(instance -> instanceFlowHeadersForRegisteredInstanceRequestProducerService
+                        .get(instance.getId())
                 .ifPresentOrElse(
                         instanceFlowHeaders -> {
                             this.deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders);
@@ -62,16 +62,8 @@ public class InstanceService {
                         },
                         () -> {
                             log.warn("No instance flow headers found for instance with id={}", instance.getId());
-                            try {
-                                if (instanceRepository.existsById(instance.getId())) {
-                                    instanceRepository.deleteById(instance.getId());
-                                    logDeletedInstance(instance.getId());
-                                } else {
-                                    log.error("Instance with id={} does not exist anymore.", instance.getId());
-                                }
-                            } catch (EmptyResultDataAccessException e) {
-                                log.error("Instance with id={} was already deleted or does not exist", instance.getId(), e);
-                            }
+                            instanceRepository.deleteById(instance.getId());
+                            logDeletedInstance(instance.getId());
                         }
                 ));
     }
