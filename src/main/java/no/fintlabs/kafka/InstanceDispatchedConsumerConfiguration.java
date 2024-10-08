@@ -17,7 +17,8 @@ public class InstanceDispatchedConsumerConfiguration {
     public ConcurrentMessageListenerContainer<String, InstanceObjectDto>
     instanceRegisteredConsumer(
             InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
-            InstanceService instanceService) {
+            InstanceService instanceService
+    ) {
         EventTopicNameParameters topic = EventTopicNameParameters.builder()
                 .eventName("instance-dispatched")
                 .build();
