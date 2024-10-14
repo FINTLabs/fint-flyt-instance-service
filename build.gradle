@@ -44,7 +44,7 @@ dependencies {
     implementation 'no.fintlabs:fint-kafka:4.0.1'
     implementation 'no.fintlabs:fint-flyt-kafka:3.1.1'
 
-    implementation 'no.fintlabs:fint-flyt-resource-server:2.0.0'
+    implementation 'no.fintlabs:fint-flyt-resource-server:5.0.0'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
