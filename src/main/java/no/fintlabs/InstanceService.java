@@ -6,6 +6,7 @@ import no.fintlabs.kafka.InstanceDeletedEventProducerService;
 import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -61,10 +62,12 @@ public class InstanceService {
                                     () -> log.warn("No instance flow headers found for instance with id={}", instance.getId())
                             );
 
-                    instanceRepository.findById(instance.getId()).ifPresent(instanceToDelete -> {
+                    try {
                         instanceRepository.deleteById(instance.getId());
                         log.info("Instance with id={} deleted", instance.getId());
-                    });
+                    } catch (EmptyResultDataAccessException e) {
+                        log.warn("Instance with id={} was already deleted", instance.getId());
+                    }
                 }
         );
     }
