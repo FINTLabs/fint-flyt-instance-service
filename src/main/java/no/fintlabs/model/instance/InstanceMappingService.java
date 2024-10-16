@@ -33,6 +33,7 @@ public class InstanceMappingService {
                                                 .build()
                                 ))
                 )
+                .createdAt(instanceObjectDto.getCreatedAt())
                 .build();
     }
 
@@ -54,6 +55,7 @@ public class InstanceMappingService {
                                                 .toList()
                                 ))
                 )
+                .createdAt(instanceObject.getCreatedAt())
                 .build();
     }
 }
