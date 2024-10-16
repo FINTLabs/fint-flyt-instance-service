@@ -54,14 +54,23 @@ public class InstanceService {
 
     public void deleteAllOlderThan(int days) {
         this.getAllOlderThan(days).forEach(instance -> {
-                    instanceFlowHeadersForRegisteredInstanceRequestProducerService
+                    boolean isFlowHeaderPresent = instanceFlowHeadersForRegisteredInstanceRequestProducerService
                             .get(instance.getId())
-                            .ifPresentOrElse(
-                                    instanceDeletedEventProducerService::publish,
-                                    () -> log.warn("No instance flow headers found for instance with id={}", instance.getId())
-                            );
-                    instanceRepository.deleteById(instance.getId());
-                    log.info("Instance with id={} deleted", instance.getId());
+                            .map(instanceFlowHeaders -> {
+                                instanceDeletedEventProducerService.publish(instanceFlowHeaders);
+                                return true;
+                            })
+                            .orElseGet(() -> {
+                                log.warn("No instance flow headers found for instance with id={}", instance.getId());
+                                return null;
+                            }) != null;
+
+                    if (!isFlowHeaderPresent) {
+                        instanceRepository.findById(instance.getId()).ifPresent(instanceToDelete -> {
+                            instanceRepository.deleteById(instance.getId());
+                            log.info("Instance with id={} deleted", instance.getId());
+                        });
+                    }
                 }
         );
     }
