@@ -8,6 +8,7 @@ import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
 import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
 import no.fintlabs.kafka.event.topic.EventTopicService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -17,6 +18,9 @@ public class InstanceRegisteredEventProducerService {
     private final InstanceFlowEventProducer<InstanceObjectDto> newInstanceEventProducer;
     private final EventTopicNameParameters topicNameParameters;
 
+    @Value("${fint.flyt.instance-service.time-to-keep-instance-in-days:60}")
+    private int timeToKeepInstancesInDays;
+
     public InstanceRegisteredEventProducerService(
             InstanceFlowEventProducerFactory instanceFlowEventProducerFactory,
             EventTopicService eventTopicService) {
@@ -24,7 +28,10 @@ public class InstanceRegisteredEventProducerService {
         this.topicNameParameters = EventTopicNameParameters.builder()
                 .eventName("instance-registered")
                 .build();
-        eventTopicService.ensureTopic(topicNameParameters, 0);
+
+        long retentionTimeMs = timeToKeepInstancesInDays * 24L * 60L * 60L * 1000L;
+
+        eventTopicService.ensureTopic(topicNameParameters, retentionTimeMs);
     }
 
     public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceObjectDto instance) {
