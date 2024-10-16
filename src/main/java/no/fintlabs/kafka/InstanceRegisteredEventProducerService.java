@@ -11,6 +11,8 @@ import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Slf4j
 @Service
 public class InstanceRegisteredEventProducerService {
@@ -29,9 +31,7 @@ public class InstanceRegisteredEventProducerService {
                 .eventName("instance-registered")
                 .build();
 
-        long retentionTimeMs = timeToKeepInstancesInDays * 24L * 60L * 60L * 1000L;
-
-        eventTopicService.ensureTopic(topicNameParameters, retentionTimeMs);
+        eventTopicService.ensureTopic(topicNameParameters, Duration.ofDays(timeToKeepInstancesInDays).toMillis());
     }
 
     public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceObjectDto instance) {
