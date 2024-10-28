@@ -5,11 +5,15 @@ import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducer
 import no.fintlabs.model.instance.InstanceMappingService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import no.fintlabs.model.instance.entities.InstanceObject;
+import no.fintlabs.slack.SlackAlertService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.EmptyResultDataAccessException;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,6 +33,9 @@ public class InstanceServiceTest {
     @Mock
     private InstanceFlowHeadersForRegisteredInstanceRequestProducerService instanceFlowHeadersForRegisteredInstanceRequestProducerService;
 
+    @Mock
+    private SlackAlertService slackAlertService;
+
     private InstanceService instanceService;
 
     @BeforeEach
@@ -38,7 +45,8 @@ public class InstanceServiceTest {
                 instanceRepository,
                 instanceMappingService,
                 instanceDeletedEventProducerService,
-                instanceFlowHeadersForRegisteredInstanceRequestProducerService
+                instanceFlowHeadersForRegisteredInstanceRequestProducerService,
+                slackAlertService
         );
     }
 
@@ -88,5 +96,59 @@ public class InstanceServiceTest {
 
         verify(instanceRepository, times(1)).getReferenceById(id);
         verify(instanceMappingService, times(1)).toInstanceObjectDto(object);
+    }
+
+    @Test
+    void testDeleteAllOlderThan_throwsEmptyResultDataAccessException() {
+        int days = 30;
+        Timestamp oldTimestamp = Timestamp.valueOf(LocalDateTime.now().minusDays(days + 1));
+
+        InstanceObject instance1 = InstanceObject.builder().id(1L).createdAt(oldTimestamp).build();
+        InstanceObject instance2 = InstanceObject.builder().id(2L).createdAt(oldTimestamp).build();
+
+        List<InstanceObject> instanceObjects = List.of(instance1, instance2);
+
+        InstanceObjectDto instanceDto1 = InstanceObjectDto.builder().id(1L).createdAt(oldTimestamp).build();
+        InstanceObjectDto instanceDto2 = InstanceObjectDto.builder().id(2L).createdAt(oldTimestamp).build();
+
+        doReturn(instanceObjects).when(instanceRepository).findAllOlderThan(any(Timestamp.class));
+
+        doReturn(instanceDto1).when(instanceMappingService).toInstanceObjectDto(instance1);
+        doReturn(instanceDto2).when(instanceMappingService).toInstanceObjectDto(instance2);
+
+        doReturn(Optional.empty()).when(instanceFlowHeadersForRegisteredInstanceRequestProducerService).get(anyLong());
+
+        doThrow(new EmptyResultDataAccessException(1)).when(instanceRepository).deleteById(anyLong());
+
+        instanceService.deleteAllOlderThan(days);
+
+        verify(slackAlertService, atLeastOnce()).sendMessage(contains("was already deleted"));
+    }
+
+    @Test
+    void testDeleteAllOlderThan_throwsRuntimeException() {
+        int days = 30;
+        Timestamp oldTimestamp = Timestamp.valueOf(LocalDateTime.now().minusDays(days + 1));
+
+        InstanceObject instance1 = InstanceObject.builder().id(1L).createdAt(oldTimestamp).build();
+        InstanceObject instance2 = InstanceObject.builder().id(2L).createdAt(oldTimestamp).build();
+
+        List<InstanceObject> instanceObjects = List.of(instance1, instance2);
+
+        InstanceObjectDto instanceDto1 = InstanceObjectDto.builder().id(1L).createdAt(oldTimestamp).build();
+        InstanceObjectDto instanceDto2 = InstanceObjectDto.builder().id(2L).createdAt(oldTimestamp).build();
+
+        doReturn(instanceObjects).when(instanceRepository).findAllOlderThan(any(Timestamp.class));
+
+        doReturn(instanceDto1).when(instanceMappingService).toInstanceObjectDto(instance1);
+        doReturn(instanceDto2).when(instanceMappingService).toInstanceObjectDto(instance2);
+
+        doReturn(Optional.empty()).when(instanceFlowHeadersForRegisteredInstanceRequestProducerService).get(anyLong());
+
+        doThrow(new RuntimeException("Simulated deletion failure")).when(instanceRepository).deleteById(anyLong());
+
+        instanceService.deleteAllOlderThan(days);
+
+        verify(slackAlertService, atLeastOnce()).sendMessage(contains("Failed to delete instance"));
     }
 }
