@@ -32,6 +32,9 @@ patches:
             "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
             "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
           }
+      - op: replace
+        path: "/spec/onePassword/itemPath"
+        value: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
     target:
       kind: Application
       name: fint-flyt-instance-service
