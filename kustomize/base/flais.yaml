@@ -45,7 +45,9 @@ spec:
       value: "60"
   envFrom:
     - secretRef:
-        name: fint-flyt-v1-slack-webhook
+        name: fint-flyt-v1-slack-webhook-op
+  onePassword:
+    itemPath: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
   resources:
     limits:
       memory: "2048Mi"
