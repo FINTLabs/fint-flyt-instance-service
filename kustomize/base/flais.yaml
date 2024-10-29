@@ -44,7 +44,7 @@ spec:
     - name: fint.flyt.instance-service.time-to-keep-instance-in-days
       value: "60"
   onePassword:
-    itemPath: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
+    itemPath: path
   resources:
     limits:
       memory: "2048Mi"
