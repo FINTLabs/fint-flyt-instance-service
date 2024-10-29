@@ -43,6 +43,8 @@ spec:
       value: "true"
     - name: fint.flyt.instance-service.time-to-keep-instance-in-days
       value: "60"
+  onePassword:
+    itemPath: path
   resources:
     limits:
       memory: "2048Mi"
