@@ -43,9 +43,6 @@ spec:
       value: "true"
     - name: fint.flyt.instance-service.time-to-keep-instance-in-days
       value: "60"
-  envFrom:
-    - secretRef:
-        name: fint-flyt-v1-slack-webhook-op
   onePassword:
     itemPath: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
   resources:
