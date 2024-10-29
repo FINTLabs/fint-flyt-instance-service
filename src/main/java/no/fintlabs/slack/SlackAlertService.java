@@ -10,19 +10,32 @@ import java.util.Map;
 @Service
 public class SlackAlertService {
 
-    private final RestTemplate restTemplate;
+    @Value("${fint.org-id}")
+    private String orgId;
+
+    @Value("${fint.application-id}")
+    private String applicationId;
 
     @Value("${slack.webhook.url}")
     private String slackWebhookUrl;
 
-    public SlackAlertService(RestTemplate restTemplate) {
+    private final RestTemplate restTemplate;
+
+    public SlackAlertService(
+            RestTemplate restTemplate
+    ) {
         this.restTemplate = restTemplate;
     }
 
     public void sendMessage(String message) {
         Map<String, String> payload = new HashMap<>();
-        payload.put("text", message);
+        String formattedMessage = formatMessageWithPrefix(message);
+        payload.put("text", formattedMessage);
 
         restTemplate.postForObject(slackWebhookUrl, payload, String.class);
+    }
+
+    private String formatMessageWithPrefix(String message) {
+        return orgId + "-" + applicationId + "-" + message;
     }
 }

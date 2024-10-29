@@ -66,6 +66,9 @@ public class InstanceService {
                                     () -> log.warn("No instance flow headers found for instance with id={}", instance.getId())
                             );
                     try {
+                        if (instance.getId() == 1) {
+                            throw new Exception("test");
+                        }
                         instanceRepository.deleteById(instance.getId());
                         log.info("Instance with id={} deleted", instance.getId());
                     } catch (EmptyResultDataAccessException e) {
