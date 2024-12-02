@@ -32,7 +32,7 @@ public class SlackAlertService {
         String formattedMessage = formatMessageWithPrefix(message);
         payload.put("text", formattedMessage);
 
-        restTemplate.postForObject(slackWebhookUrl, payload, String.class);
+//        restTemplate.postForObject(slackWebhookUrl, payload, String.class);
     }
 
     private String formatMessageWithPrefix(String message) {
