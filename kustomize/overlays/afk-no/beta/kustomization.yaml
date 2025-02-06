@@ -29,6 +29,7 @@ patches:
           {
             "afk.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
             "viken.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
+            "frid-iks.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
             "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
             "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
           }
