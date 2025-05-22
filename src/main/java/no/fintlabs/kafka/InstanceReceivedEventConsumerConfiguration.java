@@ -4,7 +4,9 @@ import no.fintlabs.InstanceService;
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventConsumerFactoryService;
 import no.fintlabs.kafka.event.EventConsumerConfiguration;
 import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
+import no.fintlabs.kafka.event.topic.EventTopicService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
@@ -14,6 +16,18 @@ import org.springframework.util.backoff.FixedBackOff;
 @Configuration
 public class InstanceReceivedEventConsumerConfiguration {
 
+    private final EventTopicNameParameters formDefinitionEventTopicNameParameters;
+
+    public InstanceReceivedEventConsumerConfiguration(
+            EventTopicService eventTopicService,
+            @Value("${fint.kafka.topic.instance-retention-ms}") long retentionMs
+    ) {
+        this.formDefinitionEventTopicNameParameters = EventTopicNameParameters.builder()
+                .eventName("instance-received")
+                .build();
+        eventTopicService.ensureTopic(formDefinitionEventTopicNameParameters, retentionMs);
+    }
+
     @Bean
     public ConcurrentMessageListenerContainer<String, InstanceObjectDto> instanceReceivedEventConsumer(
             InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
@@ -21,6 +35,7 @@ public class InstanceReceivedEventConsumerConfiguration {
             InstanceRegisteredEventProducerService instanceRegisteredEventProducerService,
             InstanceRegistrationErrorEventProducerService instanceRegistrationErrorEventProducerService
     ) {
+
         return instanceFlowEventConsumerFactoryService.createRecordFactory(
                 InstanceObjectDto.class,
                 instanceFlowConsumerRecord -> {
@@ -49,9 +64,7 @@ public class InstanceReceivedEventConsumerConfiguration {
                         ))
                         .build()
         ).createContainer(
-                EventTopicNameParameters.builder()
-                        .eventName("instance-received")
-                        .build()
+                this.formDefinitionEventTopicNameParameters
         );
 
     }

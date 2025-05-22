@@ -3,6 +3,7 @@ fint:
     topic:
       org-id: ${fint.org-id}
       domain-context: flyt
+      instance-retention-ms: 345600000
     application-id: ${fint.application-id}
 spring:
   kafka:
