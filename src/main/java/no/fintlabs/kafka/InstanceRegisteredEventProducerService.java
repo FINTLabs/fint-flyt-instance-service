@@ -11,8 +11,6 @@ import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-
 @Slf4j
 @Service
 public class InstanceRegisteredEventProducerService {
@@ -20,18 +18,17 @@ public class InstanceRegisteredEventProducerService {
     private final InstanceFlowEventProducer<InstanceObjectDto> newInstanceEventProducer;
     private final EventTopicNameParameters topicNameParameters;
 
-    @Value("${fint.flyt.instance-service.time-to-keep-instance-in-days:60}")
-    private int timeToKeepInstancesInDays;
-
     public InstanceRegisteredEventProducerService(
             InstanceFlowEventProducerFactory instanceFlowEventProducerFactory,
-            EventTopicService eventTopicService) {
+            EventTopicService eventTopicService,
+            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time-ms}") long retentionMs
+    ) {
         this.newInstanceEventProducer = instanceFlowEventProducerFactory.createProducer(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters.builder()
                 .eventName("instance-registered")
                 .build();
 
-        eventTopicService.ensureTopic(topicNameParameters, Duration.ofDays(timeToKeepInstancesInDays).toMillis());
+        eventTopicService.ensureTopic(topicNameParameters, retentionMs);
     }
 
     public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceObjectDto instance) {
