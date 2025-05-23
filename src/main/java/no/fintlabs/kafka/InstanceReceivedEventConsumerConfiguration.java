@@ -20,7 +20,7 @@ public class InstanceReceivedEventConsumerConfiguration {
 
     public InstanceReceivedEventConsumerConfiguration(
             EventTopicService eventTopicService,
-            @Value("${fint.kafka.topic.instance-retention-ms}") long retentionMs
+            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time-ms}") long retentionMs
     ) {
         this.formDefinitionEventTopicNameParameters = EventTopicNameParameters.builder()
                 .eventName("instance-received")
