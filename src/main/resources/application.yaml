@@ -1,5 +1,10 @@
 fint:
   application-id: fint-flyt-instance-service
+  flyt:
+    instance-service:
+      kafka:
+        topic:
+          instance-processing-events-retention-time-ms: 345600000
 server:
   error:
     include-message: always

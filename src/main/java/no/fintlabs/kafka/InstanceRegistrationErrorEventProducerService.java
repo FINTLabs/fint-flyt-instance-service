@@ -8,6 +8,7 @@ import no.fintlabs.kafka.event.error.Error;
 import no.fintlabs.kafka.event.error.ErrorCollection;
 import no.fintlabs.kafka.event.error.topic.ErrorEventTopicNameParameters;
 import no.fintlabs.kafka.event.error.topic.ErrorEventTopicService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,7 +19,8 @@ public class InstanceRegistrationErrorEventProducerService {
 
     public InstanceRegistrationErrorEventProducerService(
             ErrorEventTopicService errorEventTopicService,
-            InstanceFlowErrorEventProducer instanceFlowErrorEventProducer
+            InstanceFlowErrorEventProducer instanceFlowErrorEventProducer,
+            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time-ms}") long retentionMs
     ) {
         this.instanceFlowErrorEventProducer = instanceFlowErrorEventProducer;
 
@@ -26,7 +28,7 @@ public class InstanceRegistrationErrorEventProducerService {
                 .errorEventName("instance-registration-error")
                 .build();
 
-        errorEventTopicService.ensureTopic(topicNameParameters, 0);
+        errorEventTopicService.ensureTopic(topicNameParameters, retentionMs);
     }
 
     public void publishGeneralSystemErrorEvent(InstanceFlowHeaders instanceFlowHeaders) {
