@@ -6,7 +6,6 @@ import no.fintlabs.kafka.event.EventConsumerConfiguration;
 import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
 import no.fintlabs.kafka.event.topic.EventTopicService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
@@ -20,12 +19,12 @@ public class InstanceReceivedEventConsumerConfiguration {
 
     public InstanceReceivedEventConsumerConfiguration(
             EventTopicService eventTopicService,
-            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time-ms}") long retentionMs
+            KafkaTopicProperties kafkaTopicProperties
     ) {
         this.formDefinitionEventTopicNameParameters = EventTopicNameParameters.builder()
                 .eventName("instance-received")
                 .build();
-        eventTopicService.ensureTopic(formDefinitionEventTopicNameParameters, retentionMs);
+        eventTopicService.ensureTopic(formDefinitionEventTopicNameParameters, kafkaTopicProperties.getInstanceProcessingEventsRetentionTimeMs());
     }
 
     @Bean

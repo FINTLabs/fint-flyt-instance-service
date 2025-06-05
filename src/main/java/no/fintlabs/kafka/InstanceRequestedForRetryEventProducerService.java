@@ -7,7 +7,6 @@ import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
 import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
 import no.fintlabs.kafka.event.topic.EventTopicService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,13 +18,13 @@ public class InstanceRequestedForRetryEventProducerService {
     public InstanceRequestedForRetryEventProducerService(
             InstanceFlowEventProducerFactory instanceFlowEventProducerFactory,
             EventTopicService eventTopicService,
-            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time-ms}") long retentionMs
+            KafkaTopicProperties kafkaTopicProperties
     ) {
         this.newInstanceEventProducer = instanceFlowEventProducerFactory.createProducer(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters.builder()
                 .eventName("instance-requested-for-retry")
                 .build();
-        eventTopicService.ensureTopic(topicNameParameters, retentionMs);
+        eventTopicService.ensureTopic(topicNameParameters, kafkaTopicProperties.getInstanceProcessingEventsRetentionTimeMs());
     }
 
     public void publish(InstanceFlowHeaders instanceFlowHeaders, InstanceObjectDto instance) {
