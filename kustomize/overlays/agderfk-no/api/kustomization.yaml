@@ -5,9 +5,10 @@ namespace: agderfk-no
 resources:
   - ../../../base
 
-commonLabels:
-  app.kubernetes.io/instance: fint-flyt-instance-service_agderfk_no
-  fintlabs.no/org-id: agderfk.no
+labels:
+  - pairs:
+      app.kubernetes.io/instance: fint-flyt-instance-service_agderfk_no
+      fintlabs.no/org-id: agderfk.no
 
 patches:
   - patch: |-
@@ -34,6 +35,9 @@ patches:
       - op: replace
         path: "/spec/onePassword/itemPath"
         value: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
+      - op: replace
+        path: "/spec/probes/readiness/path"
+        value: "/agderfk-no/actuator/health"
     target:
       kind: Application
       name: fint-flyt-instance-service
