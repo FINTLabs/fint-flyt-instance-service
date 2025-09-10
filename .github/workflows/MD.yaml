@@ -105,7 +105,7 @@ jobs:
           resource-group: ${{ steps.rg.outputs.result }}
           admin: true
           use-kubelogin: true
-      - uses: azure/k8s-deploy@v5
+      - uses: azure/k8s-deploy@v5.0.3
         with:
           action: deploy
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
