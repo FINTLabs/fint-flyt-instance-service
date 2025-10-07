@@ -40,6 +40,9 @@ patches:
       - op: replace
         path: "/spec/probes/readiness/path"
         value: "/ofk-no/actuator/health"
+      - op: replace
+        path: "/spec/observability/metrics/path"
+        value: "/ofk-no/actuator/prometheus"
     target:
       kind: Application
       name: fint-flyt-instance-service
