@@ -51,7 +51,7 @@ jobs:
             cluster: aks-beta-fint-2021-11-23
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: echo "IMAGE_NAME=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - uses: docker/login-action@v3
         with:
@@ -59,12 +59,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.workflow_run.head_sha }}
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         id: environment
         with:
           script: return '${{ matrix.cluster }}'.split('-')[1]
           result-encoding: string
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         id: resource-group
         with:
           script: return 'rg-aks-${{ steps.environment.outputs.result }}'
