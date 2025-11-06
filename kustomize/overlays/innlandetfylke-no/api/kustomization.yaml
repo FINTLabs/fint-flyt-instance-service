@@ -28,9 +28,9 @@ patches:
         path: "/spec/env/1/value"
         value: |
           {
-            "innlandetfylke.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
-            "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
-            "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
+            "innlandetfylke.no":["USER"],
+            "vigo.no":["DEVELOPER", "USER"],
+            "novari.no":["DEVELOPER", "USER"]
           }
       - op: replace
         path: "/spec/env/4/value"
