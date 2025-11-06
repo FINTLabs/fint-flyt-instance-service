@@ -3,6 +3,7 @@ package no.fintlabs.model.instance.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,7 +42,10 @@ public class InstanceObject {
     private long id;
 
     @ElementCollection
-    @JoinColumn(name = "instance_object_id")
+    @CollectionTable(
+            name = "instance_object_values",
+            joinColumns = @JoinColumn(name = "instance_object_id")
+    )
     @MapKeyColumn(name = "key")
     @Column(name = "value")
     @JdbcTypeCode(SqlTypes.LONGVARCHAR)
