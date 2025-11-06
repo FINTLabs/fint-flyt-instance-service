@@ -1,49 +1,45 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: vlfk-no
+namespace: $NAMESPACE
 
 resources:
   - ../../../base
 
 labels:
   - pairs:
-      app.kubernetes.io/instance: fint-flyt-instance-service_vlfk_no
-      fintlabs.no/org-id: vlfk.no
+      app.kubernetes.io/instance: $APP_INSTANCE_LABEL
+      fintlabs.no/org-id: $ORG_ID_DOT
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "vlfk-no.flyt.*"
+        value: "$KAFKA_TOPIC"
       - op: replace
         path: "/spec/orgId"
-        value: "vlfk.no"
+        value: "$ORG_ID_DOT"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/vlfk-no"
+        value: "$BASE_PATH"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/vlfk-no/api/intern/handlinger/instanser"
+        value: "$INGRESS_BASE_PATH"
       - op: replace
         path: "/spec/env/1/value"
         value: |
-          {
-            "vlfk.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
-            "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
-            "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
-          }
+$ROLE_MAPPING
       - op: replace
         path: "/spec/env/4/value"
-        value: "vlfk-no"
+        value: "$FINT_KAFKA_TOPIC_ORGID"
       - op: replace
         path: "/spec/onePassword/itemPath"
-        value: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
+        value: "$ONEPASSWORD_ITEM_PATH"
       - op: replace
         path: "/spec/probes/readiness/path"
-        value: "/vlfk-no/actuator/health"
+        value: "$READINESS_PATH"
       - op: replace
         path: "/spec/observability/metrics/path"
-        value: "/vlfk-no/actuator/prometheus"
+        value: "$METRICS_PATH"
     target:
       kind: Application
       name: fint-flyt-instance-service

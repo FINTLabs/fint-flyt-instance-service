@@ -37,12 +37,14 @@ spec:
     - name: fint.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json
       value: |
         {
-          "fintlabs.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
+          "fintlabs.no":["DEVELOPER"]
         }
     - name: fint.flyt.resource-server.security.api.internal.enabled
       value: "true"
     - name: fint.flyt.instance-service.time-to-keep-instance-in-days
       value: "60"
+    - name: fint.kafka.topic.orgId
+      value: fintlabs-no
   onePassword:
     itemPath: path
   resources:

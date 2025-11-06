@@ -4,7 +4,7 @@ fint:
     instance-service:
       kafka:
         topic:
-          instance-processing-events-retention-time-ms: 345600000
+          instance-processing-events-retention-time: "4d"
 server:
   error:
     include-message: always

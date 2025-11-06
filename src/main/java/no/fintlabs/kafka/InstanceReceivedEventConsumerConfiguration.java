@@ -1,42 +1,63 @@
 package no.fintlabs.kafka;
 
 import no.fintlabs.InstanceService;
-import no.fintlabs.flyt.kafka.event.InstanceFlowEventConsumerFactoryService;
-import no.fintlabs.kafka.event.EventConsumerConfiguration;
-import no.fintlabs.kafka.event.topic.EventTopicNameParameters;
-import no.fintlabs.kafka.event.topic.EventTopicService;
+import no.fintlabs.flyt.kafka.instanceflow.consuming.InstanceFlowListenerFactoryService;
+import no.fintlabs.kafka.consuming.ErrorHandlerConfiguration;
+import no.fintlabs.kafka.consuming.ErrorHandlerFactory;
+import no.fintlabs.kafka.consuming.ListenerConfiguration;
+import no.fintlabs.kafka.topic.EventTopicService;
+import no.fintlabs.kafka.topic.configuration.EventCleanupFrequency;
+import no.fintlabs.kafka.topic.configuration.EventTopicConfiguration;
+import no.fintlabs.kafka.topic.name.EventTopicNameParameters;
+import no.fintlabs.kafka.topic.name.TopicNamePrefixParameters;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
+
+import java.time.Duration;
 
 @Configuration
 public class InstanceReceivedEventConsumerConfiguration {
 
-    private final EventTopicNameParameters formDefinitionEventTopicNameParameters;
+    private final EventTopicNameParameters eventTopicNameParameters;
+
+    private static final int PARTITIONS = 1;
 
     public InstanceReceivedEventConsumerConfiguration(
             EventTopicService eventTopicService,
-            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time-ms}") long retentionMs
+            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime
     ) {
-        this.formDefinitionEventTopicNameParameters = EventTopicNameParameters.builder()
+        this.eventTopicNameParameters = EventTopicNameParameters
+                .builder()
+                .topicNamePrefixParameters(TopicNamePrefixParameters
+                        .builder()
+                        .orgIdApplicationDefault()
+                        .domainContextApplicationDefault()
+                        .build()
+                )
                 .eventName("instance-received")
                 .build();
-        eventTopicService.ensureTopic(formDefinitionEventTopicNameParameters, retentionMs);
+        eventTopicService.createOrModifyTopic(eventTopicNameParameters, EventTopicConfiguration
+                .builder()
+                .partitions(PARTITIONS)
+                .retentionTime(retentionTime)
+                .cleanupFrequency(EventCleanupFrequency.NORMAL)
+                .build());
     }
 
     @Bean
     public ConcurrentMessageListenerContainer<String, InstanceObjectDto> instanceReceivedEventConsumer(
-            InstanceFlowEventConsumerFactoryService instanceFlowEventConsumerFactoryService,
+            InstanceFlowListenerFactoryService instanceFlowListenerFactoryService,
             InstanceService instanceService,
             InstanceRegisteredEventProducerService instanceRegisteredEventProducerService,
-            InstanceRegistrationErrorEventProducerService instanceRegistrationErrorEventProducerService
+            InstanceRegistrationErrorEventProducerService instanceRegistrationErrorEventProducerService,
+            ErrorHandlerFactory errorHandlerFactory
     ) {
 
-        return instanceFlowEventConsumerFactoryService.createRecordFactory(
+        return instanceFlowListenerFactoryService.createRecordListenerContainerFactory(
                 InstanceObjectDto.class,
                 instanceFlowConsumerRecord -> {
                     try {
@@ -57,14 +78,22 @@ public class InstanceReceivedEventConsumerConfiguration {
                         );
                     }
                 },
-                EventConsumerConfiguration
-                        .builder()
-                        .errorHandler(new DefaultErrorHandler(
-                                new FixedBackOff(FixedBackOff.DEFAULT_INTERVAL, 0)
-                        ))
-                        .build()
+                ListenerConfiguration
+                        .stepBuilder()
+                        .groupIdApplicationDefault()
+                        .maxPollRecordsKafkaDefault()
+                        .maxPollIntervalKafkaDefault()
+                        .continueFromPreviousOffsetOnAssignment()
+                        .build(),
+                errorHandlerFactory.createErrorHandler(
+                        ErrorHandlerConfiguration
+                                .stepBuilder()
+                                .retryWithFixedInterval(Duration.ofMillis(FixedBackOff.DEFAULT_INTERVAL), 0)
+                                .skipFailedRecords()
+                                .build()
+                )
         ).createContainer(
-                this.formDefinitionEventTopicNameParameters
+                this.eventTopicNameParameters
         );
 
     }

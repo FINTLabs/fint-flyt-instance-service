@@ -1,7 +1,7 @@
 package no.fintlabs;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
+import no.fintlabs.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
 import no.fintlabs.kafka.InstanceDeletedEventProducerService;
 import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.model.instance.InstanceMappingService;

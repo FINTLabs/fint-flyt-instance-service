@@ -1,43 +1,55 @@
 package no.fintlabs.kafka;
 
 import no.fintlabs.ErrorCode;
-import no.fintlabs.flyt.kafka.event.error.InstanceFlowErrorEventProducer;
-import no.fintlabs.flyt.kafka.event.error.InstanceFlowErrorEventProducerRecord;
-import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
-import no.fintlabs.kafka.event.error.Error;
-import no.fintlabs.kafka.event.error.ErrorCollection;
-import no.fintlabs.kafka.event.error.topic.ErrorEventTopicNameParameters;
-import no.fintlabs.kafka.event.error.topic.ErrorEventTopicService;
+import no.fintlabs.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
+import no.fintlabs.flyt.kafka.instanceflow.producing.InstanceFlowProducerRecord;
+import no.fintlabs.flyt.kafka.instanceflow.producing.InstanceFlowTemplate;
+import no.fintlabs.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory;
+import no.fintlabs.kafka.model.Error;
+import no.fintlabs.kafka.model.ErrorCollection;
+import no.fintlabs.kafka.topic.ErrorEventTopicService;
+import no.fintlabs.kafka.topic.configuration.EventCleanupFrequency;
+import no.fintlabs.kafka.topic.configuration.EventTopicConfiguration;
+import no.fintlabs.kafka.topic.name.ErrorEventTopicNameParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
 
 @Service
 public class InstanceRegistrationErrorEventProducerService {
 
-    private final InstanceFlowErrorEventProducer instanceFlowErrorEventProducer;
+    private final InstanceFlowTemplate<ErrorCollection> instanceFlowTemplate;
     private final ErrorEventTopicNameParameters topicNameParameters;
+
+    private static final int PARTITIONS = 1;
 
     public InstanceRegistrationErrorEventProducerService(
             ErrorEventTopicService errorEventTopicService,
-            InstanceFlowErrorEventProducer instanceFlowErrorEventProducer,
-            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time-ms}") long retentionMs
+            InstanceFlowTemplateFactory instanceFlowTemplateFactory,
+            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime
     ) {
-        this.instanceFlowErrorEventProducer = instanceFlowErrorEventProducer;
+        this.instanceFlowTemplate = instanceFlowTemplateFactory.createTemplate(ErrorCollection.class);
 
         this.topicNameParameters = ErrorEventTopicNameParameters.builder()
                 .errorEventName("instance-registration-error")
                 .build();
 
-        errorEventTopicService.ensureTopic(topicNameParameters, retentionMs);
+        errorEventTopicService.createOrModifyTopic(topicNameParameters, EventTopicConfiguration
+                .builder()
+                .partitions(PARTITIONS)
+                .retentionTime(retentionTime)
+                .cleanupFrequency(EventCleanupFrequency.NORMAL)
+                .build());
     }
 
     public void publishGeneralSystemErrorEvent(InstanceFlowHeaders instanceFlowHeaders) {
-        instanceFlowErrorEventProducer.send(
-                InstanceFlowErrorEventProducerRecord
-                        .builder()
-                        .topicNameParameters(topicNameParameters)
+        instanceFlowTemplate.send(
+                InstanceFlowProducerRecord
+                        .<ErrorCollection>builder()
                         .instanceFlowHeaders(instanceFlowHeaders)
-                        .errorCollection(new ErrorCollection(Error
+                        .topicNameParameters(topicNameParameters)
+                        .value(new ErrorCollection(Error
                                 .builder()
                                 .errorCode(ErrorCode.GENERAL_SYSTEM_ERROR.getCode())
                                 .build()))

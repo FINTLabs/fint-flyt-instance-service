@@ -1,6 +1,7 @@
 package no.fintlabs;
 
-import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
+import jakarta.persistence.EntityNotFoundException;
+import no.fintlabs.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
 import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.kafka.InstanceRequestedForRetryEventProducerService;
 import no.fintlabs.kafka.InstanceRetryRequestErrorEventProducerService;
@@ -14,13 +15,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class InstanceRetryControllerTest {
 
@@ -83,7 +91,7 @@ public class InstanceRetryControllerTest {
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.retry(instanceId));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatus());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
         assertTrue(Objects.requireNonNull(exception.getReason()).contains("Could not find instance flow headers for registered instance with id=" + instanceId));
     }
 
@@ -93,7 +101,7 @@ public class InstanceRetryControllerTest {
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.retry(instanceId));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatus());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
         assertNull(exception.getReason());
         verify(instanceRetryRequestErrorEventProducerService, never()).publishGeneralSystemErrorEvent(any());
     }
@@ -112,7 +120,7 @@ public class InstanceRetryControllerTest {
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> controller.retry(instanceId));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, ex.getStatus());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, ex.getStatusCode());
         verify(instanceRetryRequestErrorEventProducerService).publishGeneralSystemErrorEvent(any(InstanceFlowHeaders.class));
     }
 

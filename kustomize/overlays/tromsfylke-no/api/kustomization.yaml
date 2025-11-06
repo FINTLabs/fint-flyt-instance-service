@@ -33,6 +33,9 @@ patches:
             "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
           }
       - op: replace
+        path: "/spec/env/4/value"
+        value: "tromsfylke-no"
+      - op: replace
         path: "/spec/onePassword/itemPath"
         value: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
       - op: replace
@@ -44,5 +47,3 @@ patches:
     target:
       kind: Application
       name: fint-flyt-instance-service
-
-

@@ -1,17 +1,21 @@
 package no.fintlabs;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders;
+import no.fintlabs.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
 import no.fintlabs.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.fintlabs.kafka.InstanceRequestedForRetryEventProducerService;
 import no.fintlabs.kafka.InstanceRetryRequestErrorEventProducerService;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 
@@ -99,12 +103,8 @@ public class InstanceRetryController {
                 }
                 log.error(e.getMessage());
             }
-
         }
 
         return ResponseEntity.ok().build();
-
     }
-
-
 }
