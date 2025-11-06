@@ -8,6 +8,7 @@ import no.fintlabs.kafka.topic.EventTopicService;
 import no.fintlabs.kafka.topic.configuration.EventCleanupFrequency;
 import no.fintlabs.kafka.topic.configuration.EventTopicConfiguration;
 import no.fintlabs.kafka.topic.name.EventTopicNameParameters;
+import no.fintlabs.kafka.topic.name.TopicNamePrefixParameters;
 import no.fintlabs.model.instance.dtos.InstanceObjectDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,12 @@ public class InstanceRequestedForRetryEventProducerService {
     ) {
         this.instanceFlowTemplate = instanceFlowTemplateFactory.createTemplate(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters.builder()
+                .topicNamePrefixParameters(TopicNamePrefixParameters
+                        .builder()
+                        .orgIdApplicationDefault()
+                        .domainContextApplicationDefault()
+                        .build()
+                )
                 .eventName("instance-requested-for-retry")
                 .build();
         eventTopicService.createOrModifyTopic(topicNameParameters, EventTopicConfiguration
