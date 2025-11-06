@@ -11,6 +11,7 @@ import no.fintlabs.kafka.topic.ErrorEventTopicService;
 import no.fintlabs.kafka.topic.configuration.EventCleanupFrequency;
 import no.fintlabs.kafka.topic.configuration.EventTopicConfiguration;
 import no.fintlabs.kafka.topic.name.ErrorEventTopicNameParameters;
+import no.fintlabs.kafka.topic.name.TopicNamePrefixParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,14 @@ public class InstanceRegistrationErrorEventProducerService {
     ) {
         this.instanceFlowTemplate = instanceFlowTemplateFactory.createTemplate(ErrorCollection.class);
 
-        this.topicNameParameters = ErrorEventTopicNameParameters.builder()
+        this.topicNameParameters = ErrorEventTopicNameParameters
+                .builder()
+                .topicNamePrefixParameters(TopicNamePrefixParameters
+                        .builder()
+                        .orgIdApplicationDefault()
+                        .domainContextApplicationDefault()
+                        .build()
+                )
                 .errorEventName("instance-registration-error")
                 .build();
 
