@@ -22,3 +22,7 @@ spring:
     password: password
 server:
   port: 8081
+
+slack:
+  webhook:
+    url: "https://localhost/slack"
