@@ -1,22 +1,15 @@
+${AnsiColor.BRIGHT_RED}
+                               :: Spring Boot${spring-boot.formatted-version} - magic from FLYT ::
 
-                                    :: Spring Boot${spring-boot.formatted-version} ::
+${AnsiColor.RED}         ░████████████▓        ██████░      ▓████           ░████░      ████████████▓░        ▒███▓    ▓██▓░   ░▓███░
+${AnsiColor.RED}       ▓████▓      ░█████▓        ▓████▓     ▓████         ░███▓░    ▓████▒       ▒████▓      ▒███████████░    ░▓███░
+${AnsiColor.RED}      ███▓░           ░████          ▓███░    ░████       ░███▓    ░████             ████░    ▒█████▓          ░▓███░
+${AnsiColor.RED}     ▓███░             ░███▓         ░▓██▓     ░████░    ░███▓     ▓███              ░███░    ▒███▓            ░▓███░
+${AnsiColor.RED}     ▓███░         ░███▓             ░███▓       ████░  ░███▒      ▒███▓             ▒███░    ▒███▓            ░▓███░
+${AnsiColor.RED}     ▓███░          ░████░          ▓███▓         ████▓▒███▒        ▓████░         ░█████░    ▒███▓            ░▓███░
+${AnsiColor.RED}     ▓███░            ░███████████████▓            ███████▒           ▓██████████████████░    ▒███▓            ░▓███░
+${AnsiColor.RED}     ▓███░                ░▓██████░                 ▓████░                ░▓█████▓░  ░███░    ▒███▓            ░▓███░
 
-${Ansi.RED} 			FFFFFFFFFFFFFFFFFFFFFFIIIIIIIIIINNNNNNNN        NNNNNNNNTTTTTTTTTTTTTTTTTTTTTTT
-${Ansi.RED} 			F::::::::::::::::::::FI::::::::IN:::::::N       N::::::NT:::::::::::::::::::::T
-${Ansi.RED} 			F::::::::::::::::::::FI::::::::IN::::::::N      N::::::NT:::::::::::::::::::::T
-${Ansi.RED} 			FF::::::FFFFFFFFF::::FII::::::IIN:::::::::N     N::::::NT:::::TT:::::::TT:::::T
-${Ansi.RED} 			  F:::::F       FFFFFF  I::::I  N::::::::::N    N::::::NTTTTTT  T:::::T  TTTTTT
-${Ansi.RED} 			  F:::::F               I::::I  N:::::::::::N   N::::::N        T:::::T
-${Ansi.RED} 			  F::::::FFFFFFFFFF     I::::I  N:::::::N::::N  N::::::N        T:::::T
-${Ansi.RED} 			  F:::::::::::::::F     I::::I  N::::::N N::::N N::::::N        T:::::T
-${Ansi.RED} 			  F:::::::::::::::F     I::::I  N::::::N  N::::N:::::::N        T:::::T
-${Ansi.RED} 			  F::::::FFFFFFFFFF     I::::I  N::::::N   N:::::::::::N        T:::::T
-${Ansi.RED} 			  F:::::F               I::::I  N::::::N    N::::::::::N        T:::::T
-${Ansi.RED} 			  F:::::F               I::::I  N::::::N     N:::::::::N        T:::::T
-${Ansi.RED} 			FF:::::::FF           II::::::IIN::::::N      N::::::::N      TT:::::::TT
-${Ansi.RED} 			F::::::::FF           I::::::::IN::::::N       N:::::::N      T:::::::::T
-${Ansi.RED} 			F::::::::FF           I::::::::IN::::::N        N::::::N      T:::::::::T
-${Ansi.RED} 			FFFFFFFFFFF           IIIIIIIIIINNNNNNNN         NNNNNNN      TTTTTTTTTTT
+${AnsiColor.BRIGHT_RED}     Drivkraft for digitalt fellesskap
 
-${Ansi.GREEN}              Greetings from FINTLabs! ${Ansi.DEFAULT}
-
+${Ansi.DEFAULT}${AnsiBackground.DEFAULT}
