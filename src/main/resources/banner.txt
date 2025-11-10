@@ -1,5 +1,5 @@
 ${AnsiColor.BRIGHT_RED}
-                               :: Spring Boot${spring-boot.formatted-version} - magic from FLYT ::
+                               :: Spring Boot${spring-boot.formatted-version} - Flyt Hard: with a Vengeance ::
 
 ${AnsiColor.RED}         ░████████████▓        ██████░      ▓████           ░████░      ████████████▓░        ▒███▓    ▓██▓░   ░▓███░
 ${AnsiColor.RED}       ▓████▓      ░█████▓        ▓████▓     ▓████         ░███▓░    ▓████▒       ▒████▓      ▒███████████░    ░▓███░
