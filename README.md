@@ -12,18 +12,18 @@ Spring Boot service that persists FINT Flyt process instances, orchestrates Kafk
 
 ## Architecture Overview
 
-| Component                                                     | Responsibility                                                                                                  |
-|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `InstanceRetryController`                                     | Handles single/batch retry requests and triggers Kafka events; lives under the internal API namespace.         |
-| `InstanceService`                                             | Core business logic for CRUD operations, mapping DTOs, and coordinating downstream producers.                  |
-| `InstanceRepository`                                          | Spring Data JPA repository that persists and queries instance entities in Postgres.                            |
-| `InstanceCleanupService`                                      | Scheduled service that deletes instances older than `fint.flyt.instance-service.time-to-keep-instance-in-days`.|
-| `InstanceFlowHeadersForRegisteredInstanceRequestProducerService` | Requests flow headers used when emitting retry/deleted events.                                                 |
-| `InstanceRequestedForRetryEventProducerService`               | Publishes instance retry requests to Kafka and provisions the topic with retention configuration.              |
-| `InstanceDeletedEventProducerService`                         | Emits `instance-deleted` events whenever records are purged.                                                   |
-| `InstanceRetryRequestErrorEventProducerService`               | Publishes general system errors when retries fail after headers were resolved.                                 |
-| `InstanceReceivedEventConsumerConfiguration` / `InstanceDispatchedConsumerConfiguration` | Configures Kafka consumers that react to lifecycle events to stay aligned with upstream flows.                |
-| `SlackAlertService`                                           | Sends formatted notifications to a configured Slack webhook for cleanup anomalies.                             |
+| Component                                                     | Responsibility                                                                                                    |
+|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `InstanceRetryController`                                     | Handles single/batch retry requests and triggers Kafka events; lives under the internal API namespace.            |
+| `InstanceService`                                             | Core business logic for CRUD operations, mapping DTOs, and coordinating downstream producers.                     |
+| `InstanceRepository`                                          | Spring Data JPA repository that persists and queries instance entities in Postgres.                               |
+| `InstanceCleanupService`                                      | Scheduled service that deletes instances older than `novari.flyt.instance-service.time-to-keep-instance-in-days`. |
+| `InstanceFlowHeadersForRegisteredInstanceRequestProducerService` | Requests flow headers used when emitting retry/deleted events.                                                    |
+| `InstanceRequestedForRetryEventProducerService`               | Publishes instance retry requests to Kafka and provisions the topic with retention configuration.                 |
+| `InstanceDeletedEventProducerService`                         | Emits `instance-deleted` events whenever records are purged.                                                      |
+| `InstanceRetryRequestErrorEventProducerService`               | Publishes general system errors when retries fail after headers were resolved.                                    |
+| `InstanceReceivedEventConsumerConfiguration` / `InstanceDispatchedConsumerConfiguration` | Configures Kafka consumers that react to lifecycle events to stay aligned with upstream flows.                    |
+| `SlackAlertService`                                           | Sends formatted notifications to a configured Slack webhook for cleanup anomalies.                                |
 
 ## HTTP API
 
@@ -42,11 +42,11 @@ Errors surface as standard Spring MVC responses: `404 Not Found` when an instanc
   - `instance-requested-for-retry`
   - `instance-registered`, `instance-registration-error`, `instance-deleted`, and `instance-retry-request-error`
 - Consumes instance lifecycle events through `InstanceReceivedEventConsumerConfiguration` and `InstanceDispatchedConsumerConfiguration` to coordinate retries and header lookups.
-- Topic retention is governed by `fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` (default four days). A millisecond suffix variant (`...-retention-time-ms`) is also supported for services that require explicit units.
+- Topic retention is governed by `novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` (default four days). A millisecond suffix variant (`...-retention-time-ms`) is also supported for services that require explicit units.
 
 ## Scheduled Tasks
 
-`InstanceCleanupService.cleanUp()` runs every 24 hours (initial delay 30 seconds) and deletes instances older than `fint.flyt.instance-service.time-to-keep-instance-in-days` (defaults to 60). When a record is removed the service publishes `instance-deleted` events and warns Slack if the delete fails or if headers are missing.
+`InstanceCleanupService.cleanUp()` runs every 24 hours (initial delay 30 seconds) and deletes instances older than `novari.flyt.instance-service.time-to-keep-instance-in-days` (defaults to 60). When a record is removed the service publishes `instance-deleted` events and warns Slack if the delete fails or if headers are missing.
 
 ## Configuration
 
@@ -54,15 +54,15 @@ The application composes the shared Spring profiles `flyt-kafka`, `flyt-logging`
 
 Key properties:
 
-| Property | Description |
-| --- | --- |
-| `fint.application-id` | Defaults to `fint-flyt-instance-service`. |
-| `fint.flyt.instance-service.time-to-keep-instance-in-days` | Retention window used by the cleanup job (default 60). |
-| `fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` | Duration string used to configure Kafka topic retention (default `4d`). |
-| `spring.datasource.*` | Provide JDBC connection details for Postgres; overlays inject environment-specific secrets. |
-| `spring.security.oauth2.resourceserver.jwt.issuer-uri` | OAuth issuer for protected internal endpoints. |
-| `fint.flyt.resource-server.security.api.internal-client` | Defines clients permitted to call internal APIs. |
-| `fint.slack.webhook-url` (via secrets) | Slack webhook consumed by `SlackAlertService`. |
+| Property                                                                             | Description |
+|--------------------------------------------------------------------------------------| --- |
+| `fint.application-id`                                                                | Defaults to `fint-flyt-instance-service`. |
+| `novari.flyt.instance-service.time-to-keep-instance-in-days`                         | Retention window used by the cleanup job (default 60). |
+| `novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` | Duration string used to configure Kafka topic retention (default `4d`). |
+| `spring.datasource.*`                                                                | Provide JDBC connection details for Postgres; overlays inject environment-specific secrets. |
+| `spring.security.oauth2.resourceserver.jwt.issuer-uri`                               | OAuth issuer for protected internal endpoints. |
+| `novari.flyt.resource-server.security.api.internal-client`                           | Defines clients permitted to call internal APIs. |
+| `fint.slack.webhook-url` (via secrets)                                               | Slack webhook consumed by `SlackAlertService`. |
 
 Secrets referenced in Kustomize overlays must provide database credentials, OAuth settings, Kafka access, and Slack webhook URLs.
 
@@ -83,7 +83,7 @@ Useful commands:
 ./gradlew test            # run unit tests
 ```
 
-Configure `SPRING_PROFILES_ACTIVE` or override properties (e.g. `fint.flyt.instance-service.time-to-keep-instance-in-days`) as needed for local experiments. Point Kafka settings at your development broker (typically `localhost:9092`).
+Configure `SPRING_PROFILES_ACTIVE` or override properties (e.g. `novari.flyt.instance-service.time-to-keep-instance-in-days`) as needed for local experiments. Point Kafka settings at your development broker (typically `localhost:9092`).
 
 ## Deployment
 
@@ -107,7 +107,7 @@ The script injects namespace-specific values (base paths, Kafka topics, OnePassw
 ## Security
 
 - Uses the FINT OAuth2 resource server setup for JWT validation (`spring.security.oauth2.resourceserver.jwt.issuer-uri`).
-- Restricts internal APIs to trusted clients defined via `fint.flyt.resource-server.security.api.internal-client`.
+- Restricts internal APIs to trusted clients defined via `novari.flyt.resource-server.security.api.internal-client`.
 
 ## Observability & Operations
 

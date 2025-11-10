@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class InstanceCleanupService {
 
-    @Value("${fint.flyt.instance-service.time-to-keep-instance-in-days:60}")
+    @Value("${novari.flyt.instance-service.time-to-keep-instance-in-days:60}")
     private int timeToKeepInstancesInDays;
 
     private final InstanceService instanceService;

@@ -28,7 +28,7 @@ public class InstanceReceivedEventConsumerConfiguration {
 
     public InstanceReceivedEventConsumerConfiguration(
             EventTopicService eventTopicService,
-            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime
+            @Value("${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime
     ) {
         this.eventTopicNameParameters = EventTopicNameParameters
                 .builder()

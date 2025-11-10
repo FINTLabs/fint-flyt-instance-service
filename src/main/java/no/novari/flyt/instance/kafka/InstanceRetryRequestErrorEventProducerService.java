@@ -28,7 +28,7 @@ public class InstanceRetryRequestErrorEventProducerService {
     public InstanceRetryRequestErrorEventProducerService(
             ErrorEventTopicService errorEventTopicService,
             InstanceFlowTemplateFactory instanceFlowTemplateFactory,
-            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime) {
+            @Value("${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime) {
         this.instanceFlowTemplate = instanceFlowTemplateFactory.createTemplate(ErrorCollection.class);
 
         this.topicNameParameters = ErrorEventTopicNameParameters

@@ -28,7 +28,7 @@ public class InstanceRegisteredEventProducerService {
     public InstanceRegisteredEventProducerService(
             InstanceFlowTemplateFactory instanceFlowTemplateFactory,
             EventTopicService eventTopicService,
-            @Value("${fint.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime
+            @Value("${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") Duration retentionTime
     ) {
         this.instanceFlowTemplate = instanceFlowTemplateFactory.createTemplate(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters

@@ -1,16 +1,20 @@
 fint:
   application-id: fint-flyt-instance-service
+  cache:
+    defaultCacheEntryTimeToLiveMillis: 518400000
+    defaultCacheHeapSize: 1000000
+
+novari:
   flyt:
     instance-service:
       kafka:
         topic:
           instance-processing-events-retention-time: "4d"
-  cache:
-    defaultCacheEntryTimeToLiveMillis: 518400000
-    defaultCacheHeapSize: 1000000
+
 server:
   error:
     include-message: always
+
 spring:
   profiles:
     include:
