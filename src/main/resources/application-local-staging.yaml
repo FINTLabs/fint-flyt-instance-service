@@ -10,7 +10,7 @@ novari:
         api:
           internal:
             enabled: true
-            authorized-org-id-role-pairs-json: "{\"vigo.no\":[\"https://role-catalog.vigoiks.no/vigo/flyt/developer\"]}"
+            authorized-org-id-role-pairs-json: "{\"vigo.no\":[\"DEVELOPER\"]}"
     instance-service:
       time-to-keep-instance-in-days: 60
 

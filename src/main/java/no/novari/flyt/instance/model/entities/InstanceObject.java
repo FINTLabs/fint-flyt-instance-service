@@ -43,7 +43,6 @@ public class InstanceObject {
 
     @ElementCollection
     @CollectionTable(
-            name = "instance_object_values",
             joinColumns = @JoinColumn(name = "instance_object_id")
     )
     @MapKeyColumn(name = "key")
