@@ -1,16 +1,16 @@
 package no.novari.flyt.instance.kafka;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
-import no.fintlabs.flyt.kafka.instanceflow.producing.InstanceFlowProducerRecord;
-import no.fintlabs.flyt.kafka.instanceflow.producing.InstanceFlowTemplate;
-import no.fintlabs.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory;
-import no.fintlabs.kafka.topic.EventTopicService;
-import no.fintlabs.kafka.topic.configuration.EventCleanupFrequency;
-import no.fintlabs.kafka.topic.configuration.EventTopicConfiguration;
-import no.fintlabs.kafka.topic.name.EventTopicNameParameters;
-import no.fintlabs.kafka.topic.name.TopicNamePrefixParameters;
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto;
+import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
+import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowProducerRecord;
+import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplate;
+import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory;
+import no.novari.kafka.topic.EventTopicService;
+import no.novari.kafka.topic.configuration.EventCleanupFrequency;
+import no.novari.kafka.topic.configuration.EventTopicConfiguration;
+import no.novari.kafka.topic.name.EventTopicNameParameters;
+import no.novari.kafka.topic.name.TopicNamePrefixParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

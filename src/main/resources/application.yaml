@@ -1,8 +1,5 @@
 fint:
   application-id: fint-flyt-instance-service
-  cache:
-    defaultCacheEntryTimeToLiveMillis: 518400000
-    defaultCacheHeapSize: 1000000
 
 novari:
   flyt:

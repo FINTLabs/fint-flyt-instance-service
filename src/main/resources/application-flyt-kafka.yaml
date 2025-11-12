@@ -1,8 +1,9 @@
-fint:
+novari:
   kafka:
     topic:
       domain-context: flyt
     application-id: ${fint.application-id}
+
 spring:
   kafka:
     consumer:

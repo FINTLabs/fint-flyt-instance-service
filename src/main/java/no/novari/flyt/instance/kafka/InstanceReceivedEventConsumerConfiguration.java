@@ -1,16 +1,16 @@
 package no.novari.flyt.instance.kafka;
 
 import no.novari.flyt.instance.InstanceService;
-import no.fintlabs.flyt.kafka.instanceflow.consuming.InstanceFlowListenerFactoryService;
-import no.fintlabs.kafka.consuming.ErrorHandlerConfiguration;
-import no.fintlabs.kafka.consuming.ErrorHandlerFactory;
-import no.fintlabs.kafka.consuming.ListenerConfiguration;
-import no.fintlabs.kafka.topic.EventTopicService;
-import no.fintlabs.kafka.topic.configuration.EventCleanupFrequency;
-import no.fintlabs.kafka.topic.configuration.EventTopicConfiguration;
-import no.fintlabs.kafka.topic.name.EventTopicNameParameters;
-import no.fintlabs.kafka.topic.name.TopicNamePrefixParameters;
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto;
+import no.novari.flyt.kafka.instanceflow.consuming.InstanceFlowListenerFactoryService;
+import no.novari.kafka.consuming.ErrorHandlerConfiguration;
+import no.novari.kafka.consuming.ErrorHandlerFactory;
+import no.novari.kafka.consuming.ListenerConfiguration;
+import no.novari.kafka.topic.EventTopicService;
+import no.novari.kafka.topic.configuration.EventCleanupFrequency;
+import no.novari.kafka.topic.configuration.EventTopicConfiguration;
+import no.novari.kafka.topic.name.EventTopicNameParameters;
+import no.novari.kafka.topic.name.TopicNamePrefixParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

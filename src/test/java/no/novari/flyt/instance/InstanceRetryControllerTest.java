@@ -1,11 +1,11 @@
 package no.novari.flyt.instance;
 
 import jakarta.persistence.EntityNotFoundException;
-import no.fintlabs.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
 import no.novari.flyt.instance.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.novari.flyt.instance.kafka.InstanceRequestedForRetryEventProducerService;
 import no.novari.flyt.instance.kafka.InstanceRetryRequestErrorEventProducerService;
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto;
+import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

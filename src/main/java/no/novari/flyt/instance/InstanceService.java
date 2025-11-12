@@ -1,12 +1,12 @@
 package no.novari.flyt.instance;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
 import no.novari.flyt.instance.kafka.InstanceDeletedEventProducerService;
 import no.novari.flyt.instance.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService;
 import no.novari.flyt.instance.model.InstanceMappingService;
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto;
 import no.novari.flyt.instance.slack.SlackAlertService;
+import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 

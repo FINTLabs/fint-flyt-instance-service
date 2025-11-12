@@ -43,7 +43,7 @@ spec:
       value: "true"
     - name: novari.flyt.instance-service.time-to-keep-instance-in-days
       value: "60"
-    - name: fint.kafka.topic.orgId
+    - name: novari.kafka.topic.orgId
       value: fintlabs-no
   onePassword:
     itemPath: path
