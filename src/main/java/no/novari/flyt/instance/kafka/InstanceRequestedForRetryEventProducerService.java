@@ -31,7 +31,7 @@ public class InstanceRequestedForRetryEventProducerService {
         this.instanceFlowTemplate = instanceFlowTemplateFactory.createTemplate(InstanceObjectDto.class);
         this.topicNameParameters = EventTopicNameParameters.builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()
@@ -39,7 +39,7 @@ public class InstanceRequestedForRetryEventProducerService {
                 .eventName("instance-requested-for-retry")
                 .build();
         eventTopicService.createOrModifyTopic(topicNameParameters, EventTopicConfiguration
-                .builder()
+                .stepBuilder()
                 .partitions(PARTITIONS)
                 .retentionTime(retentionMs)
                 .cleanupFrequency(EventCleanupFrequency.NORMAL)

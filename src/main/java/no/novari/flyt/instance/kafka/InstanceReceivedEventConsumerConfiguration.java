@@ -33,7 +33,7 @@ public class InstanceReceivedEventConsumerConfiguration {
         this.eventTopicNameParameters = EventTopicNameParameters
                 .builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()
@@ -41,7 +41,7 @@ public class InstanceReceivedEventConsumerConfiguration {
                 .eventName("instance-received")
                 .build();
         eventTopicService.createOrModifyTopic(eventTopicNameParameters, EventTopicConfiguration
-                .builder()
+                .stepBuilder()
                 .partitions(PARTITIONS)
                 .retentionTime(retentionTime)
                 .cleanupFrequency(EventCleanupFrequency.NORMAL)

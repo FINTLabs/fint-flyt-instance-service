@@ -26,7 +26,7 @@ public class InstanceDispatchedConsumerConfiguration {
         EventTopicNameParameters topic = EventTopicNameParameters
                 .builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()

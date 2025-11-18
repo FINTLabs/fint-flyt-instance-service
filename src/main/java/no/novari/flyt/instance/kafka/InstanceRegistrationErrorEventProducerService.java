@@ -35,7 +35,7 @@ public class InstanceRegistrationErrorEventProducerService {
         this.topicNameParameters = ErrorEventTopicNameParameters
                 .builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()
@@ -44,7 +44,7 @@ public class InstanceRegistrationErrorEventProducerService {
                 .build();
 
         errorEventTopicService.createOrModifyTopic(topicNameParameters, EventTopicConfiguration
-                .builder()
+                .stepBuilder()
                 .partitions(PARTITIONS)
                 .retentionTime(retentionTime)
                 .cleanupFrequency(EventCleanupFrequency.NORMAL)

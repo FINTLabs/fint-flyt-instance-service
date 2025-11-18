@@ -34,7 +34,7 @@ public class InstanceRegisteredEventProducerService {
         this.topicNameParameters = EventTopicNameParameters
                 .builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()
@@ -43,7 +43,7 @@ public class InstanceRegisteredEventProducerService {
                 .build();
 
         eventTopicService.createOrModifyTopic(topicNameParameters, EventTopicConfiguration
-                .builder()
+                .stepBuilder()
                 .partitions(PARTITIONS)
                 .retentionTime(retentionTime)
                 .cleanupFrequency(EventCleanupFrequency.NORMAL)

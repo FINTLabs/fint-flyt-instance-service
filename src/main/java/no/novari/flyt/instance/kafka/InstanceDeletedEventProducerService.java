@@ -35,7 +35,7 @@ public class InstanceDeletedEventProducerService {
         this.topicNameParameters = EventTopicNameParameters
                 .builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()
@@ -43,7 +43,7 @@ public class InstanceDeletedEventProducerService {
                 .eventName("instance-deleted")
                 .build();
         eventTopicService.createOrModifyTopic(topicNameParameters, EventTopicConfiguration
-                .builder()
+                .stepBuilder()
                 .partitions(PARTITIONS)
                 .retentionTime(retentionTime)
                 .cleanupFrequency(EventCleanupFrequency.NORMAL)

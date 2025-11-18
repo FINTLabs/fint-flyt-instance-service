@@ -34,7 +34,7 @@ public class InstanceRetryRequestErrorEventProducerService {
         this.topicNameParameters = ErrorEventTopicNameParameters
                 .builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()
@@ -43,7 +43,7 @@ public class InstanceRetryRequestErrorEventProducerService {
                 .build();
 
         errorEventTopicService.createOrModifyTopic(topicNameParameters, EventTopicConfiguration
-                .builder()
+                .stepBuilder()
                 .partitions(PARTITIONS)
                 .retentionTime(retentionTime)
                 .cleanupFrequency(EventCleanupFrequency.NORMAL)
