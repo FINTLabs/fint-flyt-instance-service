@@ -28,9 +28,11 @@ patches:
         path: "/spec/env/1/value"
         value: |
 $ROLE_MAPPING
-      - op: replace
-        path: "/spec/env/4/value"
-        value: "$FINT_KAFKA_TOPIC_ORGID"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "novari.kafka.topic.orgId"
+         value: "$FINT_KAFKA_TOPIC_ORGID"
       - op: replace
         path: "/spec/onePassword/itemPath"
         value: "$ONEPASSWORD_ITEM_PATH"

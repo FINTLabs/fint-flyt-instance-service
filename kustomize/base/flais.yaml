@@ -39,12 +39,8 @@ spec:
         {
           "fintlabs.no":["DEVELOPER"]
         }
-    - name: novari.flyt.resource-server.security.api.internal.enabled
-      value: "true"
     - name: novari.flyt.instance-service.time-to-keep-instance-in-days
       value: "60"
-    - name: novari.kafka.topic.orgId
-      value: fintlabs-no
   onePassword:
     itemPath: path
   resources:

@@ -32,9 +32,11 @@ patches:
             "vigo.no":["DEVELOPER", "USER"],
             "novari.no":["DEVELOPER", "USER"]
           }
-      - op: replace
-        path: "/spec/env/4/value"
-        value: "mrfylke-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "novari.kafka.topic.orgId"
+         value: "mrfylke-no"
       - op: replace
         path: "/spec/onePassword/itemPath"
         value: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
