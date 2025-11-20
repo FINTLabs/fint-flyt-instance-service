@@ -4,6 +4,7 @@ fint:
 novari:
   flyt:
     instance-service:
+      time-to-keep-instance-in-days: 60
       kafka:
         topic:
           instance-processing-events-retention-time: "4d"

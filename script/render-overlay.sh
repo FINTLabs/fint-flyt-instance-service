@@ -14,7 +14,7 @@ build_role_mapping() {
 
   case "$namespace" in
     afk-no|bfk-no|ofk-no)
-      mapping=$(printf '          {\n            "%s":["%s"],\n            "viken.no":["%s"],\n            "frid-iks.no":["%s"],\n            "vigo.no":["%s", "%s"],\n            "novari.no":["%s", "%s"]\n          }\n' \
+      mapping=$(printf '            {\n              "%s":["%s"],\n              "viken.no":["%s"],\n              "frid-iks.no":["%s"],\n              "vigo.no":["%s", "%s"],\n              "novari.no":["%s", "%s"]\n            }\n' \
         "$org_id_dot" \
         "$ROLE_CATALOG_USER_URL" \
         "$ROLE_CATALOG_USER_URL" \
@@ -25,7 +25,7 @@ build_role_mapping() {
         "$ROLE_CATALOG_USER_URL")
       ;;
     *)
-      mapping=$(printf '          {\n            "%s":["%s"],\n            "vigo.no":["%s", "%s"],\n            "novari.no":["%s", "%s"]\n          }\n' \
+      mapping=$(printf '            {\n              "%s":["%s"],\n              "vigo.no":["%s", "%s"],\n              "novari.no":["%s", "%s"]\n            }\n' \
         "$org_id_dot" \
         "$ROLE_CATALOG_USER_URL" \
         "$ROLE_CATALOG_DEVELOPER_URL" \

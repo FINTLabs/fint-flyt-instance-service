@@ -24,9 +24,11 @@ patches:
       - op: replace
         path: "/spec/ingress/basePath"
         value: "$INGRESS_BASE_PATH"
-      - op: replace
-        path: "/spec/env/1/value"
-        value: |
+      - op: add
+        path: "/spec/env/-"
+        value:
+          name: "novari.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json"
+          value: |
 $ROLE_MAPPING
       - op: add
         path: "/spec/env/-"

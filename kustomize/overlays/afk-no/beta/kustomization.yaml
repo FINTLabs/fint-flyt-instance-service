@@ -24,16 +24,18 @@ patches:
       - op: replace
         path: "/spec/ingress/basePath"
         value: "/beta/afk-no/api/intern/handlinger/instanser"
-      - op: replace
-        path: "/spec/env/1/value"
-        value: |
-          {
-            "afk.no":["USER"],
-            "viken.no":["USER"],
-            "frid-iks.no":["USER"],
-            "vigo.no":["DEVELOPER", "USER"],
-            "novari.no":["DEVELOPER", "USER"]
-          }
+      - op: add
+        path: "/spec/env/-"
+        value:
+          name: "novari.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json"
+          value: |
+            {
+              "afk.no":["USER"],
+              "viken.no":["USER"],
+              "frid-iks.no":["USER"],
+              "vigo.no":["DEVELOPER", "USER"],
+              "novari.no":["DEVELOPER", "USER"]
+            }
       - op: add
         path: "/spec/env/-"
         value:

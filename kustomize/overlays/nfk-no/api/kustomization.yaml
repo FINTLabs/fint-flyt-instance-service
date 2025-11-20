@@ -24,14 +24,16 @@ patches:
       - op: replace
         path: "/spec/ingress/basePath"
         value: "/nfk-no/api/intern/handlinger/instanser"
-      - op: replace
-        path: "/spec/env/1/value"
-        value: |
-          {
-            "nfk.no":["USER"],
-            "vigo.no":["DEVELOPER", "USER"],
-            "novari.no":["DEVELOPER", "USER"]
-          }
+      - op: add
+        path: "/spec/env/-"
+        value:
+          name: "novari.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json"
+          value: |
+            {
+              "nfk.no":["USER"],
+              "vigo.no":["DEVELOPER", "USER"],
+              "novari.no":["DEVELOPER", "USER"]
+            }
       - op: add
         path: "/spec/env/-"
         value:
