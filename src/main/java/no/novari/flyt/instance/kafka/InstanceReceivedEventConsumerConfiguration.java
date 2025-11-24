@@ -89,6 +89,8 @@ public class InstanceReceivedEventConsumerConfiguration {
                         ErrorHandlerConfiguration
                                 .stepBuilder()
                                 .retryWithFixedInterval(Duration.ofMillis(FixedBackOff.DEFAULT_INTERVAL), 0)
+                                .useDefaultRetryClassification()
+                                .restartRetryOnExceptionChange()
                                 .skipFailedRecords()
                                 .build()
                 )
