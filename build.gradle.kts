@@ -44,7 +44,6 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
-    implementation("no.novari:kafka:5.0.0")
     implementation("no.novari:flyt-kafka:4.0.0")
     implementation("no.novari:flyt-resource-server:6.0.0")
 
