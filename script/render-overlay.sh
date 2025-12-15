@@ -71,9 +71,6 @@ while IFS= read -r file; do
   export METRICS_PATH="${base_path}/actuator/prometheus"
   export FINT_KAFKA_TOPIC_ORGID="${namespace}"
 
-  vault_name="aks-${environment}-vault"
-  export ONEPASSWORD_ITEM_PATH="vaults/${vault_name}/items/fint-flyt-v1-slack-webhook"
-
   export ROLE_MAPPING="$(build_role_mapping "$namespace" "$ORG_ID_DOT")"
   if [[ -z "$ROLE_MAPPING" ]]; then
     echo "Unable to determine role mapping for namespace '${namespace}'" >&2
