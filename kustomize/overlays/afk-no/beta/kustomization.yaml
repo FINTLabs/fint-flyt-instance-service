@@ -24,16 +24,23 @@ patches:
       - op: replace
         path: "/spec/ingress/basePath"
         value: "/beta/afk-no/api/intern/handlinger/instanser"
-      - op: replace
-        path: "/spec/env/1/value"
-        value: |
-          {
-            "afk.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
-            "viken.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
-            "frid-iks.no":["https://role-catalog.vigoiks.no/vigo/flyt/user"],
-            "vigo.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"],
-            "novari.no":["https://role-catalog.vigoiks.no/vigo/flyt/developer"]
-          }
+      - op: add
+        path: "/spec/env/-"
+        value:
+          name: "novari.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json"
+          value: |
+            {
+              "afk.no":["USER"],
+              "viken.no":["USER"],
+              "frid-iks.no":["USER"],
+              "vigo.no":["DEVELOPER", "USER"],
+              "novari.no":["DEVELOPER", "USER"]
+            }
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "novari.kafka.topic.orgId"
+         value: "afk-no"
       - op: replace
         path: "/spec/onePassword/itemPath"
         value: "vaults/aks-beta-vault/items/fint-flyt-v1-slack-webhook"
@@ -46,5 +53,3 @@ patches:
     target:
       kind: Application
       name: fint-flyt-instance-service
-
-

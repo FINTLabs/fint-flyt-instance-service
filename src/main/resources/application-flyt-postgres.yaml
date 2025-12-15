@@ -6,7 +6,6 @@ spring:
           time_zone: UTC
           lob:
             non_contextual_creation: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         enable_lazy_load_no_trans: true
     hibernate:
       ddl-auto: none
