@@ -36,9 +36,6 @@ $ROLE_MAPPING
          name: "novari.kafka.topic.orgId"
          value: "$FINT_KAFKA_TOPIC_ORGID"
       - op: replace
-        path: "/spec/onePassword/itemPath"
-        value: "$ONEPASSWORD_ITEM_PATH"
-      - op: replace
         path: "/spec/probes/readiness/path"
         value: "$READINESS_PATH"
       - op: replace

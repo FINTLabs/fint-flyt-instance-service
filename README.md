@@ -1,6 +1,6 @@
 # FINT Flyt Instance Service
 
-Spring Boot service that persists FINT Flyt process instances, orchestrates Kafka events, and exposes internal APIs for retrying and cleaning up instance state. It coordinates with downstream integrations, maintains retention policies, and notifies Slack when manual intervention is required.
+Spring Boot service that persists FINT Flyt process instances, orchestrates Kafka events, and exposes internal APIs for retrying and cleaning up instance state. It coordinates with downstream integrations, and maintains retention policies.
 
 ## Highlights
 
@@ -8,7 +8,6 @@ Spring Boot service that persists FINT Flyt process instances, orchestrates Kafk
 - **Kafka orchestration** — produces retry/deletion events and consumes lifecycle notifications to keep state in sync.
 - **Scheduled hygiene** — daily cleanup removes stale instances according to a configurable retention window.
 - **Postgres persistence** — stores instance payloads with JPA mappings for retrieval, batching, and deletion.
-- **Operational alerts** — pushes Slack messages when cleanup encounters inconsistencies or unexpected failures.
 
 ## Architecture Overview
 
@@ -23,7 +22,6 @@ Spring Boot service that persists FINT Flyt process instances, orchestrates Kafk
 | `InstanceDeletedEventProducerService`                         | Emits `instance-deleted` events whenever records are purged.                                                      |
 | `InstanceRetryRequestErrorEventProducerService`               | Publishes general system errors when retries fail after headers were resolved.                                    |
 | `InstanceReceivedEventConsumerConfiguration` / `InstanceDispatchedConsumerConfiguration` | Configures Kafka consumers that react to lifecycle events to stay aligned with upstream flows.                    |
-| `SlackAlertService`                                           | Sends formatted notifications to a configured Slack webhook for cleanup anomalies.                                |
 
 ## HTTP API
 
@@ -34,7 +32,7 @@ Base path: `/api/intern/handlinger/instanser`
 | `POST` | `/{instanceId}/prov-igjen`                | Retry a specific instance by ID.                             | –                                          | `200 OK` or `404/500` on failure. |
 | `POST` | `/prov-igjen/batch`                       | Retry multiple instances in one request.                     | JSON array of instance IDs (`List<Long>`). | `200 OK`; logs per-item failures. |
 
-Errors surface as standard Spring MVC responses: `404 Not Found` when an instance is missing, `500 Internal Server Error` for unexpected issues (with Slack alerting on cleanup failures).
+Errors surface as standard Spring MVC responses: `404 Not Found` when an instance is missing, `500 Internal Server Error` for unexpected issues.
 
 ## Kafka Integration
 
@@ -46,7 +44,7 @@ Errors surface as standard Spring MVC responses: `404 Not Found` when an instanc
 
 ## Scheduled Tasks
 
-`InstanceCleanupService.cleanUp()` runs every 24 hours (initial delay 30 seconds) and deletes instances older than `novari.flyt.instance-service.time-to-keep-instance-in-days` (defaults to 60). When a record is removed the service publishes `instance-deleted` events and warns Slack if the delete fails or if headers are missing.
+`InstanceCleanupService.cleanUp()` runs every 24 hours (initial delay 30 seconds) and deletes instances older than `novari.flyt.instance-service.time-to-keep-instance-in-days` (defaults to 60). When a record is removed the service publishes `instance-deleted` events.
 
 ## Configuration
 
@@ -62,9 +60,8 @@ Key properties:
 | `spring.datasource.*`                                                                | Provide JDBC connection details for Postgres; overlays inject environment-specific secrets. |
 | `spring.security.oauth2.resourceserver.jwt.issuer-uri`                               | OAuth issuer for protected internal endpoints. |
 | `novari.flyt.resource-server.security.api.internal-client`                           | Defines clients permitted to call internal APIs. |
-| `fint.slack.webhook-url` (via secrets)                                               | Slack webhook consumed by `SlackAlertService`. |
 
-Secrets referenced in Kustomize overlays must provide database credentials, OAuth settings, Kafka access, and Slack webhook URLs.
+Secrets referenced in Kustomize overlays must provide database credentials, OAuth settings, and Kafka access.
 
 ## Running Locally
 
@@ -90,7 +87,7 @@ Configure `SPRING_PROFILES_ACTIVE` or override properties (e.g. `novari.flyt.ins
 Kustomize layout:
 
 - `kustomize/base/` contains the shared `Application` resource and supporting Kubernetes manifests.
-- `kustomize/overlays/<org>/<env>/` applies namespace labels, Kafka ACLs, URL prefixes, and OnePassword references per organization and environment.
+- `kustomize/overlays/<org>/<env>/` applies namespace labels, Kafka ACLs, and URL prefixes references per organization and environment.
 
 Templates are centralized in `kustomize/templates/`:
 
@@ -102,7 +99,7 @@ Regenerate overlays after changing the template or rendering logic:
 ./script/render-overlay.sh
 ```
 
-The script injects namespace-specific values (base paths, Kafka topics, OnePassword vaults, role mappings) and rewrites each `kustomization.yaml` in place.
+The script injects namespace-specific values (base paths, Kafka topics, role mappings) and rewrites each `kustomization.yaml` in place.
 
 ## Security
 
@@ -118,7 +115,7 @@ The script injects namespace-specific values (base paths, Kafka topics, OnePassw
 ## Development Tips
 
 - When introducing new instance states, ensure the corresponding Kafka producers/consumers are updated and retention properties remain valid.
-- `InstanceService.deleteAllOlderThan` publishes deletion events and Slack alerts—consider extending tests when altering cleanup semantics.
+- `InstanceService.deleteAllOlderThan` publishes deletion events extending tests when altering cleanup semantics.
 - If additional organizations require custom role mappings for overlays, update `script/render-overlay.sh` to reflect the new rules.
 
 ## Contributing

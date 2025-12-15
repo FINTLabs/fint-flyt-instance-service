@@ -40,9 +40,6 @@ patches:
          name: "novari.kafka.topic.orgId"
          value: "tromsfylke-no"
       - op: replace
-        path: "/spec/onePassword/itemPath"
-        value: "vaults/aks-api-vault/items/fint-flyt-v1-slack-webhook"
-      - op: replace
         path: "/spec/probes/readiness/path"
         value: "/tromsfylke-no/actuator/health"
       - op: replace

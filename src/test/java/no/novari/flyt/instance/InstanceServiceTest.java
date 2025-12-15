@@ -5,7 +5,6 @@ import no.novari.flyt.instance.kafka.InstanceFlowHeadersForRegisteredInstanceReq
 import no.novari.flyt.instance.model.InstanceMappingService;
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto;
 import no.novari.flyt.instance.model.entities.InstanceObject;
-import no.novari.flyt.instance.slack.SlackAlertService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -24,8 +23,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -46,9 +43,6 @@ public class InstanceServiceTest {
     @Mock
     private InstanceFlowHeadersForRegisteredInstanceRequestProducerService instanceFlowHeadersForRegisteredInstanceRequestProducerService;
 
-    @Mock
-    private SlackAlertService slackAlertService;
-
     private InstanceService instanceService;
 
     @BeforeEach
@@ -58,8 +52,7 @@ public class InstanceServiceTest {
                 instanceRepository,
                 instanceMappingService,
                 instanceDeletedEventProducerService,
-                instanceFlowHeadersForRegisteredInstanceRequestProducerService,
-                slackAlertService
+                instanceFlowHeadersForRegisteredInstanceRequestProducerService
         );
     }
 
@@ -134,8 +127,6 @@ public class InstanceServiceTest {
         doThrow(new EmptyResultDataAccessException(1)).when(instanceRepository).deleteById(anyLong());
 
         instanceService.deleteAllOlderThan(days);
-
-        verify(slackAlertService, atLeastOnce()).sendMessage(contains("was already deleted"));
     }
 
     @Test
@@ -161,7 +152,5 @@ public class InstanceServiceTest {
         doThrow(new RuntimeException("Simulated deletion failure")).when(instanceRepository).deleteById(anyLong());
 
         instanceService.deleteAllOlderThan(days);
-
-        verify(slackAlertService, atLeastOnce()).sendMessage(contains("Failed to delete instance"));
     }
 }
