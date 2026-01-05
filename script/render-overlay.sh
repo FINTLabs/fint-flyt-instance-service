@@ -67,7 +67,9 @@ while IFS= read -r file; do
   base_path="/${url_prefix}${NAMESPACE}"
   export BASE_PATH="$base_path"
   export INGRESS_BASE_PATH="${base_path}/api/intern/handlinger/instanser"
-  export READINESS_PATH="${base_path}/actuator/health"
+  export STARTUP_PATH="${base_path}/actuator/health"
+  export READINESS_PATH="${base_path}/actuator/health/readiness"
+  export LIVENESS_PATH="${base_path}/actuator/health/liveness"
   export METRICS_PATH="${base_path}/actuator/prometheus"
   export FINT_KAFKA_TOPIC_ORGID="${namespace}"
 
