@@ -40,8 +40,14 @@ patches:
          name: "novari.kafka.topic.orgId"
          value: "telemarkfylke-no"
       - op: replace
-        path: "/spec/probes/readiness/path"
+        path: "/spec/probes/startup/path"
         value: "/telemarkfylke-no/actuator/health"
+      - op: replace
+        path: "/spec/probes/readiness/path"
+        value: "/telemarkfylke-no/actuator/health/readiness"
+      - op: replace
+        path: "/spec/probes/liveness/path"
+        value: "/telemarkfylke-no/actuator/health/liveness"
       - op: replace
         path: "/spec/observability/metrics/path"
         value: "/telemarkfylke-no/actuator/prometheus"

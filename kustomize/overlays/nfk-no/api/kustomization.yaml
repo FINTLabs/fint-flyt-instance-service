@@ -40,8 +40,14 @@ patches:
          name: "novari.kafka.topic.orgId"
          value: "nfk-no"
       - op: replace
-        path: "/spec/probes/readiness/path"
+        path: "/spec/probes/startup/path"
         value: "/nfk-no/actuator/health"
+      - op: replace
+        path: "/spec/probes/readiness/path"
+        value: "/nfk-no/actuator/health/readiness"
+      - op: replace
+        path: "/spec/probes/liveness/path"
+        value: "/nfk-no/actuator/health/liveness"
       - op: replace
         path: "/spec/observability/metrics/path"
         value: "/nfk-no/actuator/prometheus"
