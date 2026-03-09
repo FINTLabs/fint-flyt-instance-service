@@ -35,6 +35,11 @@ $ROLE_MAPPING
         value:
          name: "novari.kafka.topic.orgId"
          value: "$FINT_KAFKA_TOPIC_ORGID"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "$BASE_PATH"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "$STARTUP_PATH"

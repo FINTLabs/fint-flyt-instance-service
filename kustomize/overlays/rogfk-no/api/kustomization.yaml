@@ -39,6 +39,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "rogfk-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/rogfk-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/rogfk-no/actuator/health"

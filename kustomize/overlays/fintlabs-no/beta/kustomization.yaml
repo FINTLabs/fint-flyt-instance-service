@@ -39,6 +39,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "fintlabs-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/beta/fintlabs-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/beta/fintlabs-no/actuator/health"

@@ -39,6 +39,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "innlandetfylke-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/beta/innlandetfylke-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/beta/innlandetfylke-no/actuator/health"

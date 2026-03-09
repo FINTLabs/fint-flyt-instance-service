@@ -39,6 +39,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "agderfk-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/agderfk-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/agderfk-no/actuator/health"

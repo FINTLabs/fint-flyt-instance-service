@@ -41,6 +41,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "ofk-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/beta/ofk-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/beta/ofk-no/actuator/health"

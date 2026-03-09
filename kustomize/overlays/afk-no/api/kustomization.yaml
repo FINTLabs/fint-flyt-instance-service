@@ -41,6 +41,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "afk-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/afk-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/afk-no/actuator/health"
