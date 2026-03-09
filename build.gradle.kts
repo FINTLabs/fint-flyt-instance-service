@@ -61,6 +61,10 @@ tasks.test {
     useJUnitPlatform()
 }
 
+springBoot {
+    mainClass.set("no.novari.ApplicationKt")
+}
+
 ktlint {
     version.set("1.8.0")
 }
