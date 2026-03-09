@@ -1,6 +1,6 @@
 novari:
   flyt:
-    resource-server:
+    web-resource-server:
       security:
         api:
           internal:
