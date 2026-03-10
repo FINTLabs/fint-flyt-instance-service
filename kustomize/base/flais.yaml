@@ -25,7 +25,7 @@ spec:
     database: fint-flyt
   url:
     hostname: flyt.vigoiks.no
-    basePath: path
+    basePath: ""
   ingress:
     enabled: true
     basePath: path
@@ -33,13 +33,13 @@ spec:
       - fint-flyt-auth-forward-sso
   env:
     - name: JAVA_TOOL_OPTIONS
-      value: '-XX:+ExitOnOutOfMemoryError -Xmx700M'
+      value: '-XX:+ExitOnOutOfMemoryError -Xmx576M -Xms384M'
   resources:
     limits:
-      memory: "750Mi"
+      memory: "768Mi"
       cpu: "500m"
     requests:
-      memory: "512Mi"
+      memory: "576Mi"
       cpu: "100m"
   probes:
     startup:

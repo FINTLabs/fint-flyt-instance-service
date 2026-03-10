@@ -19,15 +19,12 @@ patches:
         path: "/spec/orgId"
         value: "afk.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/beta/afk-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/beta/afk-no/api/intern/handlinger/instanser"
       - op: add
         path: "/spec/env/-"
         value:
-          name: "novari.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json"
+          name: "novari.flyt.web-resource-server.security.api.internal.authorized-org-id-role-pairs-json"
           value: |
             {
               "afk.no":["USER"],
@@ -41,6 +38,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "afk-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/beta/afk-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/beta/afk-no/actuator/health"

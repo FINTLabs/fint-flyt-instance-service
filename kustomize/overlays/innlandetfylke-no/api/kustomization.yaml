@@ -19,15 +19,12 @@ patches:
         path: "/spec/orgId"
         value: "innlandetfylke.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/innlandetfylke-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/innlandetfylke-no/api/intern/handlinger/instanser"
       - op: add
         path: "/spec/env/-"
         value:
-          name: "novari.flyt.resource-server.security.api.internal.authorized-org-id-role-pairs-json"
+          name: "novari.flyt.web-resource-server.security.api.internal.authorized-org-id-role-pairs-json"
           value: |
             {
               "innlandetfylke.no":["USER"],
@@ -39,6 +36,11 @@ patches:
         value:
          name: "novari.kafka.topic.orgId"
          value: "innlandetfylke-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+         name: "server.servlet.context-path"
+         value: "/innlandetfylke-no"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/innlandetfylke-no/actuator/health"

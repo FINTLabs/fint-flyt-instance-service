@@ -48,7 +48,7 @@ Errors surface as standard Spring MVC responses: `404 Not Found` when an instanc
 
 ## Configuration
 
-The application composes the shared Spring profiles `flyt-kafka`, `flyt-logging`, `flyt-postgres`, and `flyt-resource-server`.
+The application composes the shared Spring profiles `flyt-kafka`, `flyt-logging`, `flyt-postgres`, and `flyt-web-resource-server`.
 
 Key properties:
 
@@ -59,7 +59,7 @@ Key properties:
 | `novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` | Duration string used to configure Kafka topic retention (default `4d`). |
 | `spring.datasource.*`                                                                | Provide JDBC connection details for Postgres; overlays inject environment-specific secrets. |
 | `spring.security.oauth2.resourceserver.jwt.issuer-uri`                               | OAuth issuer for protected internal endpoints. |
-| `novari.flyt.resource-server.security.api.internal-client`                           | Defines clients permitted to call internal APIs. |
+| `novari.flyt.web-resource-server.security.api.internal-client`                       | Defines clients permitted to call internal APIs. |
 
 Secrets referenced in Kustomize overlays must provide database credentials, OAuth settings, and Kafka access.
 
@@ -104,7 +104,7 @@ The script injects namespace-specific values (base paths, Kafka topics, role map
 ## Security
 
 - Uses the FINT OAuth2 resource server setup for JWT validation (`spring.security.oauth2.resourceserver.jwt.issuer-uri`).
-- Restricts internal APIs to trusted clients defined via `novari.flyt.resource-server.security.api.internal-client`.
+- Restricts internal APIs to trusted clients defined via `novari.flyt.web-resource-server.security.api.internal-client`.
 
 ## Observability & Operations
 
