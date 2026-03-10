@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "telemarkfylke.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/telemarkfylke-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/telemarkfylke-no/api/intern/handlinger/instanser"
       - op: add

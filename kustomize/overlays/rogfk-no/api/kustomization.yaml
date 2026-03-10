@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "rogfk.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/rogfk-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/rogfk-no/api/intern/handlinger/instanser"
       - op: add

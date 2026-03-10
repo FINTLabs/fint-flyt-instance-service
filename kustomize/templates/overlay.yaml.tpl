@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "$ORG_ID_DOT"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "$BASE_PATH"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "$INGRESS_BASE_PATH"
       - op: add

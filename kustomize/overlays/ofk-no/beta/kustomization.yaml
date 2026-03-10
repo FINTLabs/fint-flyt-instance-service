@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "ofk.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/beta/ofk-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/beta/ofk-no/api/intern/handlinger/instanser"
       - op: add

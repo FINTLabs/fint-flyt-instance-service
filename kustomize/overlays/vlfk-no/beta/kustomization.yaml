@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "vlfk.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/beta/vlfk-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/beta/vlfk-no/api/intern/handlinger/instanser"
       - op: add

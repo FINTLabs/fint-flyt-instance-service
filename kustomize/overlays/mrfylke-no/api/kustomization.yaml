@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "mrfylke.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/mrfylke-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/mrfylke-no/api/intern/handlinger/instanser"
       - op: add

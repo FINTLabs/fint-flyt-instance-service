@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "vestfoldfylke.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/vestfoldfylke-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/vestfoldfylke-no/api/intern/handlinger/instanser"
       - op: add

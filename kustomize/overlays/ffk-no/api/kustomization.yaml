@@ -19,9 +19,6 @@ patches:
         path: "/spec/orgId"
         value: "ffk.no"
       - op: replace
-        path: "/spec/url/basePath"
-        value: "/ffk-no"
-      - op: replace
         path: "/spec/ingress/basePath"
         value: "/ffk-no/api/intern/handlinger/instanser"
       - op: add
