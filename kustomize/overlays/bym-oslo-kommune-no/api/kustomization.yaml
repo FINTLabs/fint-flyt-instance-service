@@ -8,7 +8,7 @@ resources:
 labels:
   - pairs:
       app.kubernetes.io/instance: fint-flyt-instance-service_bym-oslo-kommune_no
-      fintlabs.no/org-id: ofk.no
+      fintlabs.no/org-id: bym-oslo-kommune.no
 
 patches:
   - patch: |-
