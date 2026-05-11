@@ -8,7 +8,7 @@ resources:
 labels:
   - pairs:
       app.kubernetes.io/instance: fint-flyt-instance-service_bym-oslo-kommune_no
-      fintlabs.no/org-id: bym-oslo-kommune.no
+      fintlabs.no/org-id: bym.oslo.kommune.no
 
 patches:
   - patch: |-
@@ -17,7 +17,7 @@ patches:
         value: "bym-oslo-kommune-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "bym-oslo-kommune.no"
+        value: "bym.oslo.kommune.no"
       - op: replace
         path: "/spec/ingress/basePath"
         value: "/bym-oslo-kommune-no/api/intern/handlinger/instanser"
@@ -27,7 +27,7 @@ patches:
           name: "novari.flyt.web-resource-server.security.api.internal.authorized-org-id-role-pairs-json"
           value: |
             {
-              "bym-oslo-kommune.no":["USER"],
+              "bym.oslo.kommune.no":["USER"],
               "vigo.no":["DEVELOPER", "USER"],
               "novari.no":["DEVELOPER", "USER"]
             }
