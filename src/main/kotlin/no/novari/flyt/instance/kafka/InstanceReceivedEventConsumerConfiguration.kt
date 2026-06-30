@@ -53,7 +53,7 @@ class InstanceReceivedEventConsumerConfiguration(
         instanceFlowListenerFactoryService: InstanceFlowListenerFactoryService,
         instanceService: InstanceService,
         instanceRegisteredEventProducerService: InstanceRegisteredEventProducerService,
-        instanceRegistrationErrorEventProducerService: InstanceRegistrationErrorEventProducerService,
+        instanceRegistrationErrorProducerService: InstanceRegistrationErrorProducerService,
         errorHandlerFactory: ErrorHandlerFactory,
     ): ConcurrentMessageListenerContainer<String, InstanceObjectDto> {
         return instanceFlowListenerFactoryService
@@ -64,7 +64,7 @@ class InstanceReceivedEventConsumerConfiguration(
                         val persistedInstance = instanceService.save(instanceFlowConsumerRecord.consumerRecord.value())
                         val persistedInstanceId = persistedInstance.id
                         if (persistedInstanceId == null) {
-                            instanceRegistrationErrorEventProducerService.publishGeneralSystemErrorEvent(
+                            instanceRegistrationErrorProducerService.publishGeneralSystemErrorEvent(
                                 instanceFlowConsumerRecord.instanceFlowHeaders,
                             )
                         } else {
@@ -77,7 +77,7 @@ class InstanceReceivedEventConsumerConfiguration(
                             )
                         }
                     } catch (_: Exception) {
-                        instanceRegistrationErrorEventProducerService.publishGeneralSystemErrorEvent(
+                        instanceRegistrationErrorProducerService.publishGeneralSystemErrorEvent(
                             instanceFlowConsumerRecord.instanceFlowHeaders,
                         )
                     }

@@ -3,7 +3,7 @@ package no.novari.flyt.instance
 import jakarta.persistence.EntityNotFoundException
 import no.novari.flyt.instance.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService
 import no.novari.flyt.instance.kafka.InstanceRequestedForRetryEventProducerService
-import no.novari.flyt.instance.kafka.InstanceRetryRequestErrorEventProducerService
+import no.novari.flyt.instance.kafka.InstanceRetryRequestErrorProducerService
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import no.novari.flyt.webresourceserver.UrlPaths.INTERNAL_API
 import org.slf4j.LoggerFactory
@@ -24,7 +24,7 @@ class InstanceRetryController(
     private val instanceFlowHeadersForRegisteredInstanceRequestProducerService:
         InstanceFlowHeadersForRegisteredInstanceRequestProducerService,
     private val instanceRequestedForRetryEventProducerService: InstanceRequestedForRetryEventProducerService,
-    private val instanceRetryRequestErrorEventProducerService: InstanceRetryRequestErrorEventProducerService,
+    private val instanceRetryRequestErrorProducerService: InstanceRetryRequestErrorProducerService,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -51,7 +51,7 @@ class InstanceRetryController(
         } catch (e: NoInstanceFlowHeadersException) {
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.message)
         } catch (e: Exception) {
-            instanceFlowHeaders?.let(instanceRetryRequestErrorEventProducerService::publishGeneralSystemErrorEvent)
+            instanceFlowHeaders?.let(instanceRetryRequestErrorProducerService::publishGeneralSystemErrorEvent)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, null, e)
         }
     }
@@ -79,7 +79,7 @@ class InstanceRetryController(
             } catch (e: NoInstanceFlowHeadersException) {
                 log.error(e.message)
             } catch (e: Exception) {
-                instanceFlowHeaders?.let(instanceRetryRequestErrorEventProducerService::publishGeneralSystemErrorEvent)
+                instanceFlowHeaders?.let(instanceRetryRequestErrorProducerService::publishGeneralSystemErrorEvent)
                 log.error(e.message)
             }
         }
