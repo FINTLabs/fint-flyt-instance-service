@@ -3,7 +3,7 @@ package no.novari.flyt.instance
 import jakarta.persistence.EntityNotFoundException
 import no.novari.flyt.instance.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService
 import no.novari.flyt.instance.kafka.InstanceRequestedForRetryEventProducerService
-import no.novari.flyt.instance.kafka.InstanceRetryRequestErrorEventProducerService
+import no.novari.flyt.instance.kafka.InstanceRetryRequestErrorProducerService
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -36,7 +36,7 @@ class InstanceRetryControllerTest {
     private lateinit var instanceRequestedForRetryEventProducerService: InstanceRequestedForRetryEventProducerService
 
     @Mock
-    private lateinit var instanceRetryRequestErrorEventProducerService: InstanceRetryRequestErrorEventProducerService
+    private lateinit var instanceRetryRequestErrorProducerService: InstanceRetryRequestErrorProducerService
 
     @Mock
     private lateinit var instanceFlowHeaders: InstanceFlowHeaders
@@ -53,7 +53,7 @@ class InstanceRetryControllerTest {
                 instanceService,
                 instanceFlowHeadersForRegisteredInstanceRequestProducerService,
                 instanceRequestedForRetryEventProducerService,
-                instanceRetryRequestErrorEventProducerService,
+                instanceRetryRequestErrorProducerService,
             )
     }
 
@@ -109,7 +109,7 @@ class InstanceRetryControllerTest {
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.statusCode)
         assertNull(exception.reason)
-        verify(instanceRetryRequestErrorEventProducerService, never()).publishGeneralSystemErrorEvent(any())
+        verify(instanceRetryRequestErrorProducerService, never()).publishGeneralSystemErrorEvent(any())
     }
 
     @Test
@@ -131,6 +131,6 @@ class InstanceRetryControllerTest {
         val exception = assertThrows(ResponseStatusException::class.java) { controller.retry(instanceId) }
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.statusCode)
-        verify(instanceRetryRequestErrorEventProducerService).publishGeneralSystemErrorEvent(any())
+        verify(instanceRetryRequestErrorProducerService).publishGeneralSystemErrorEvent(any())
     }
 }

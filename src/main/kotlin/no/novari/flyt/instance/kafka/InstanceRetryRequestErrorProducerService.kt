@@ -7,6 +7,8 @@ import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplate
 import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory
 import no.novari.flyt.kafka.model.Error
 import no.novari.flyt.kafka.model.ErrorCollection
+import no.novari.flyt.kafka.model.InstanceErrorEvent
+import no.novari.flyt.kafka.model.InstanceErrorOrigin
 import no.novari.kafka.topic.ErrorEventTopicService
 import no.novari.kafka.topic.configuration.EventCleanupFrequency
 import no.novari.kafka.topic.configuration.EventTopicConfiguration
@@ -17,14 +19,14 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 
 @Service
-class InstanceRetryRequestErrorEventProducerService(
+class InstanceRetryRequestErrorProducerService(
     errorEventTopicService: ErrorEventTopicService,
     instanceFlowTemplateFactory: InstanceFlowTemplateFactory,
     @Value("\${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") retentionTime:
         Duration,
 ) {
-    private val instanceFlowTemplate: InstanceFlowTemplate<ErrorCollection> =
-        instanceFlowTemplateFactory.createTemplate(ErrorCollection::class.java)
+    private val instanceFlowTemplate: InstanceFlowTemplate<InstanceErrorEvent> =
+        instanceFlowTemplateFactory.createTemplate(InstanceErrorEvent::class.java)
 
     private val topicNameParameters: ErrorEventTopicNameParameters =
         ErrorEventTopicNameParameters
@@ -35,7 +37,7 @@ class InstanceRetryRequestErrorEventProducerService(
                     .orgIdApplicationDefault()
                     .domainContextApplicationDefault()
                     .build(),
-            ).errorEventName("instance-retry-request-error")
+            ).errorEventName("instance-error")
             .build()
 
     init {
@@ -53,15 +55,18 @@ class InstanceRetryRequestErrorEventProducerService(
     fun publishGeneralSystemErrorEvent(instanceFlowHeaders: InstanceFlowHeaders) {
         instanceFlowTemplate.send(
             InstanceFlowProducerRecord
-                .builder<ErrorCollection>()
+                .builder<InstanceErrorEvent>()
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .topicNameParameters(topicNameParameters)
                 .value(
-                    ErrorCollection(
-                        Error
-                            .builder()
-                            .errorCode(ErrorCode.GENERAL_SYSTEM_ERROR.getCode())
-                            .build(),
+                    InstanceErrorEvent(
+                        InstanceErrorOrigin.RETRY_REQUEST,
+                        ErrorCollection(
+                            Error
+                                .builder()
+                                .errorCode(ErrorCode.GENERAL_SYSTEM_ERROR.getCode())
+                                .build(),
+                        ),
                     ),
                 ).build(),
         )
