@@ -19,7 +19,10 @@ patches:
         path: "/spec/orgId"
         value: "fintlabs.no"
       - op: replace
-        path: "/spec/ingress/basePath"
+        path: "/spec/ingress/routes/0/path"
+        value: "/beta/fintlabs-no/api/intern/handlinger/instanser"
+      - op: replace
+        path: "/spec/ingress/routes/1/path"
         value: "/beta/fintlabs-no/api/intern/handlinger/instanser"
       - op: add
         path: "/spec/env/-"
