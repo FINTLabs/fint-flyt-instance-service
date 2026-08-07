@@ -67,20 +67,32 @@ Secrets referenced in Kustomize overlays must provide database credentials, OAut
 
 Prerequisites:
 
-- Java 21+
-- Docker (for the bundled Postgres helper) and access to a Kafka cluster
+- Java 25
+- Docker (for the bundled Postgres and Kafka environment)
 - Gradle (wrapper included)
 
-Useful commands:
+`docker-compose.yaml` provides everything the service needs locally — Postgres on `localhost:5433` (including the `fintlabs_no` schema the service expects) and a single-node Kafka broker on `localhost:9092`. Both match the settings in `application-local-staging.yaml`.
 
 ```shell
-./start-postgres          # launch a disposable Postgres on localhost:5433
-./gradlew clean build     # compile and run tests
-./gradlew bootRun         # start the service with default profiles
-./gradlew test            # run unit tests
+docker compose up -d                                          # start Postgres and Kafka
+./gradlew bootRun --args='--spring.profiles.active=local-staging'
 ```
 
-Configure `SPRING_PROFILES_ACTIVE` or override properties (e.g. `novari.flyt.instance-service.time-to-keep-instance-in-days`) as needed for local experiments. Point Kafka settings at your development broker (typically `localhost:9092`).
+The service starts on `localhost:8081`, runs its Flyway migrations against the `fintlabs_no` schema and creates its Kafka topics on startup.
+
+```shell
+docker compose down     # stop the environment, keep the data
+docker compose down -v  # stop and wipe the volumes for a clean slate
+```
+
+Other useful commands:
+
+```shell
+./gradlew check           # compile, run tests and ktlint
+./gradlew test            # run tests only
+```
+
+Override properties (e.g. `novari.flyt.instance-service.time-to-keep-instance-in-days`) as needed for local experiments.
 
 ## Deployment
 
