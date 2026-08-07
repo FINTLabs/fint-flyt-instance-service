@@ -20,7 +20,7 @@ class InstanceMappingServiceTest {
     }
 
     @Test
-    fun testToInstanceObject() {
+    fun `maps dto to instance object entity`() {
         val valuePerKey =
             mutableMapOf(
                 "key1" to "value1",
@@ -46,7 +46,7 @@ class InstanceMappingServiceTest {
     }
 
     @Test
-    fun testToInstanceObjectDto() {
+    fun `maps instance object entity to dto`() {
         val valuePerKey =
             mutableMapOf(
                 "key1" to "value1",

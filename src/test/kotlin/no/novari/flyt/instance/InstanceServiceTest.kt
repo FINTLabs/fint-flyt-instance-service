@@ -50,7 +50,7 @@ class InstanceServiceTest {
     }
 
     @Test
-    fun testSave() {
+    fun `saves instance and returns mapped dto`() {
         val valuePerKey =
             mutableMapOf(
                 "key1" to "value1",
@@ -80,7 +80,7 @@ class InstanceServiceTest {
     }
 
     @Test
-    fun testGetById() {
+    fun `gets instance by id and returns mapped dto`() {
         val valuePerKey =
             mutableMapOf(
                 "key1" to "value1",
@@ -109,7 +109,7 @@ class InstanceServiceTest {
     }
 
     @Test
-    fun testDeleteAllOlderThan_throwsEmptyResultDataAccessException() {
+    fun `continues cleanup when instance is already deleted`() {
         val days = 30
         val oldTimestamp = Date.from(Instant.now().minus((days + 1).toLong(), ChronoUnit.DAYS))
 
@@ -131,7 +131,7 @@ class InstanceServiceTest {
     }
 
     @Test
-    fun testDeleteAllOlderThan_throwsRuntimeException() {
+    fun `continues cleanup when deletion fails unexpectedly`() {
         val days = 30
         val oldTimestamp = Date.from(Instant.now().minus((days + 1).toLong(), ChronoUnit.DAYS))
 
