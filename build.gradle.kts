@@ -45,6 +45,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
+    implementation("no.novari:flyt-audit-starter:1.1.0")
     implementation("no.novari:flyt-kafka:7.2.0")
     implementation("no.novari:flyt-web-resource-server:3.2.0")
 
@@ -52,7 +53,10 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
 }
 
 tasks.test {

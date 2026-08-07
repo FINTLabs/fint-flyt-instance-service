@@ -17,8 +17,8 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.dao.EmptyResultDataAccessException
-import java.sql.Timestamp
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 
 class InstanceServiceTest {
@@ -65,7 +65,6 @@ class InstanceServiceTest {
                 id = 1L,
                 valuePerKey = valuePerKey,
                 objectCollectionPerKey = mutableMapOf(),
-                createdAt = Date(),
             )
 
         whenever(instanceMappingService.toInstanceObject(any())).thenReturn(instanceObject)
@@ -97,7 +96,6 @@ class InstanceServiceTest {
                 id = id,
                 valuePerKey = valuePerKey,
                 objectCollectionPerKey = mutableMapOf(),
-                createdAt = Date(),
             )
 
         whenever(instanceRepository.getReferenceById(any<Long>())).thenReturn(instanceObject)
@@ -113,17 +111,17 @@ class InstanceServiceTest {
     @Test
     fun testDeleteAllOlderThan_throwsEmptyResultDataAccessException() {
         val days = 30
-        val oldTimestamp = Timestamp.valueOf(LocalDateTime.now().minusDays((days + 1).toLong()))
+        val oldTimestamp = Date.from(Instant.now().minus((days + 1).toLong(), ChronoUnit.DAYS))
 
-        val instance1 = InstanceObject(id = 1L, createdAt = oldTimestamp)
-        val instance2 = InstanceObject(id = 2L, createdAt = oldTimestamp)
+        val instance1 = InstanceObject(id = 1L)
+        val instance2 = InstanceObject(id = 2L)
 
         val instanceObjects = listOf(instance1, instance2)
 
         val instanceDto1 = InstanceObjectDto(id = 1L, createdAt = oldTimestamp)
         val instanceDto2 = InstanceObjectDto(id = 2L, createdAt = oldTimestamp)
 
-        doReturn(instanceObjects).whenever(instanceRepository).findAllOlderThan(any<Timestamp>())
+        doReturn(instanceObjects).whenever(instanceRepository).findAllOlderThan(any<Instant>())
         doReturn(instanceDto1).whenever(instanceMappingService).toInstanceObjectDto(instance1)
         doReturn(instanceDto2).whenever(instanceMappingService).toInstanceObjectDto(instance2)
         doReturn(null).whenever(instanceFlowHeadersForRegisteredInstanceRequestProducerService).get(any<Long>())
@@ -135,17 +133,17 @@ class InstanceServiceTest {
     @Test
     fun testDeleteAllOlderThan_throwsRuntimeException() {
         val days = 30
-        val oldTimestamp = Timestamp.valueOf(LocalDateTime.now().minusDays((days + 1).toLong()))
+        val oldTimestamp = Date.from(Instant.now().minus((days + 1).toLong(), ChronoUnit.DAYS))
 
-        val instance1 = InstanceObject(id = 1L, createdAt = oldTimestamp)
-        val instance2 = InstanceObject(id = 2L, createdAt = oldTimestamp)
+        val instance1 = InstanceObject(id = 1L)
+        val instance2 = InstanceObject(id = 2L)
 
         val instanceObjects = listOf(instance1, instance2)
 
         val instanceDto1 = InstanceObjectDto(id = 1L, createdAt = oldTimestamp)
         val instanceDto2 = InstanceObjectDto(id = 2L, createdAt = oldTimestamp)
 
-        doReturn(instanceObjects).whenever(instanceRepository).findAllOlderThan(any<Timestamp>())
+        doReturn(instanceObjects).whenever(instanceRepository).findAllOlderThan(any<Instant>())
         doReturn(instanceDto1).whenever(instanceMappingService).toInstanceObjectDto(instance1)
         doReturn(instanceDto2).whenever(instanceMappingService).toInstanceObjectDto(instance2)
         doReturn(null).whenever(instanceFlowHeadersForRegisteredInstanceRequestProducerService).get(any<Long>())

@@ -4,6 +4,7 @@ import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.instance.model.entities.InstanceObject
 import no.novari.flyt.instance.model.entities.InstanceObjectCollection
 import org.springframework.stereotype.Service
+import java.util.Date
 
 @Service
 class InstanceMappingService {
@@ -20,7 +21,6 @@ class InstanceMappingService {
                                     .toMutableList(),
                         )
                     }.toMutableMap(),
-            createdAt = instanceObjectDto.createdAt,
         )
     }
 
@@ -34,7 +34,7 @@ class InstanceMappingService {
                         value.objects
                             .map(::toInstanceObjectDto)
                     }.toMutableMap(),
-            createdAt = instanceObject.createdAt,
+            createdAt = instanceObject.createdAt?.let(Date::from),
         )
     }
 }
