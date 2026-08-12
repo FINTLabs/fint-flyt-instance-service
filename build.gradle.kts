@@ -46,10 +46,12 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     implementation("no.novari:flyt-audit-starter:1.1.0")
-    implementation("no.novari:flyt-kafka:7.2.0")
-    implementation("no.novari:flyt-web-resource-server:4.0.0")
+    implementation("no.novari:flyt-kafka:7.3.0-rc-2")
+    implementation("no.novari:flyt-web-resource-server:4.1.0-rc-2")
+    implementation("no.novari:telemetry-starter:0.0.3")
 
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:9.0")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
