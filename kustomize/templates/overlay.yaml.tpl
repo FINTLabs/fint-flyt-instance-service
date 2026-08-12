@@ -51,7 +51,7 @@ $ROLE_MAPPING
         value: "$LIVENESS_PATH"
       - op: replace
         path: "/spec/observability/metrics/path"
-        value: "$METRICS_PATH"
+        value: "$METRICS_PATH"$OTEL_ENV_PATCH
     target:
       kind: Application
       name: fint-flyt-instance-service

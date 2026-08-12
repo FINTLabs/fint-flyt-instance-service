@@ -7,6 +7,21 @@ TEMPLATE_PATH="$ROOT/kustomize/templates/overlay.yaml.tpl"
 ROLE_CATALOG_USER_URL="USER"
 ROLE_CATALOG_DEVELOPER_URL="DEVELOPER"
 
+OTEL_ENDPOINT_BETA="http://alloy.flais-system.svc.cluster.local:4318"
+
+# Base-URL uten /v1/traces: telemetry-starter legger på signal-stien selv.
+# Settes manuelt inntil flaiserator har støtte for det, og kun i beta der Alloy kjører.
+build_otel_env_patch() {
+  local environment="$1"
+
+  if [[ "$environment" != "beta" ]]; then
+    return
+  fi
+
+  printf '\n      - op: add\n        path: "/spec/env/-"\n        value:\n          name: "OTEL_EXPORTER_OTLP_ENDPOINT"\n          value: "%s"' \
+    "$OTEL_ENDPOINT_BETA"
+}
+
 build_role_mapping() {
   local namespace="$1"
   local org_id_dot="$2"
@@ -72,6 +87,7 @@ while IFS= read -r file; do
   export LIVENESS_PATH="${base_path}/actuator/health/liveness"
   export METRICS_PATH="${base_path}/actuator/prometheus"
   export FINT_KAFKA_TOPIC_ORGID="${namespace}"
+  export OTEL_ENV_PATCH="$(build_otel_env_patch "$environment")"
 
   export ROLE_MAPPING="$(build_role_mapping "$namespace" "$ORG_ID_DOT")"
   if [[ -z "$ROLE_MAPPING" ]]; then
