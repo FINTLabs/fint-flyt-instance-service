@@ -1,11 +1,11 @@
 package no.novari.flyt.instance
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.novari.flyt.instance.kafka.InstanceDeletedEventProducerService
 import no.novari.flyt.instance.kafka.InstanceFlowHeadersForRegisteredInstanceRequestProducerService
 import no.novari.flyt.instance.model.InstanceMappingService
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
-import org.slf4j.LoggerFactory
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -19,7 +19,7 @@ class InstanceService(
     private val instanceFlowHeadersForRegisteredInstanceRequestProducerService:
         InstanceFlowHeadersForRegisteredInstanceRequestProducerService,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = KotlinLogging.logger {}
 
     fun save(instanceObjectDto: InstanceObjectDto): InstanceObjectDto {
         return instanceMappingService.toInstanceObjectDto(
@@ -43,22 +43,35 @@ class InstanceService(
         getAllOlderThan(days).forEach { instance ->
             val instanceId = instance.id
             if (instanceId == null) {
-                log.warn("Instance without id encountered during cleanup")
+                log.atWarn { message = "Instance without id encountered during cleanup" }
                 return@forEach
             }
 
             instanceFlowHeadersForRegisteredInstanceRequestProducerService
                 .get(instanceId)
                 ?.let(instanceDeletedEventProducerService::publish)
-                ?: log.warn("No instance flow headers found for instance with id={}", instanceId)
+                ?: log.atWarn {
+                    message = "No instance flow headers found for instance with id={}"
+                    arguments = arrayOf(instanceId)
+                }
 
             try {
                 instanceRepository.deleteById(instanceId)
-                log.info("Instance with id={} deleted", instanceId)
+                log.atInfo {
+                    message = "Instance with id={} deleted"
+                    arguments = arrayOf(instanceId)
+                }
             } catch (_: EmptyResultDataAccessException) {
-                log.warn("Instance with id={} was already deleted", instanceId)
+                log.atWarn {
+                    message = "Instance with id={} was already deleted"
+                    arguments = arrayOf(instanceId)
+                }
             } catch (e: Exception) {
-                log.error("Failed to delete instance with id={}", instanceId, e)
+                log.atError {
+                    message = "Failed to delete instance with id={}"
+                    arguments = arrayOf(instanceId)
+                    cause = e
+                }
             }
         }
     }
