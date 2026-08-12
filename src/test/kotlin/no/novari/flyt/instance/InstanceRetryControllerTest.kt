@@ -58,7 +58,7 @@ class InstanceRetryControllerTest {
     }
 
     @Test
-    fun retry_instanceFound_headersFound_returnsOk() {
+    fun `returns ok and publishes retry event when instance and headers are found`() {
         val instance = InstanceObjectDto()
 
         whenever(instanceService.getById(instanceId)).thenReturn(instance)
@@ -76,7 +76,7 @@ class InstanceRetryControllerTest {
     }
 
     @Test
-    fun retry_instanceNotFound_throwsResponseStatusException() {
+    fun `throws response status exception when instance does not exist`() {
         whenever(instanceService.getById(instanceId)).thenThrow(EntityNotFoundException())
 
         val exception = assertThrows(ResponseStatusException::class.java) { controller.retry(instanceId) }
@@ -85,7 +85,7 @@ class InstanceRetryControllerTest {
     }
 
     @Test
-    fun retry_noInstanceFlowHeaders_throwsResponseStatusException() {
+    fun `throws internal server error when instance flow headers are missing`() {
         val instance = InstanceObjectDto()
 
         whenever(instanceService.getById(instanceId)).thenReturn(instance)
@@ -102,7 +102,7 @@ class InstanceRetryControllerTest {
     }
 
     @Test
-    fun retry_genericException_throwsResponseStatusException() {
+    fun `throws internal server error without publishing error event when instance lookup fails`() {
         whenever(instanceService.getById(instanceId)).thenThrow(RuntimeException("Some error"))
 
         val exception = assertThrows(ResponseStatusException::class.java) { controller.retry(instanceId) }
@@ -113,7 +113,7 @@ class InstanceRetryControllerTest {
     }
 
     @Test
-    fun retry_genericExceptionWithInstanceFlowHeaders_publishesErrorAndThrowsResponseStatusException() {
+    fun `publishes error event and throws internal server error when publishing retry fails`() {
         val instance = InstanceObjectDto()
         val headers =
             InstanceFlowHeaders

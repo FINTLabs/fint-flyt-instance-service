@@ -12,12 +12,9 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.MapKeyColumn
 import jakarta.persistence.OneToMany
-import jakarta.persistence.Temporal
-import jakarta.persistence.TemporalType
-import org.hibernate.annotations.CreationTimestamp
+import no.novari.flyt.audit.entity.CreatedAuditedEntity
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import java.util.Date
 
 @Entity
 class InstanceObject(
@@ -35,8 +32,4 @@ class InstanceObject(
     @JoinColumn(name = "instance_object_id")
     @MapKeyColumn(name = "key")
     var objectCollectionPerKey: MutableMap<String, InstanceObjectCollection> = mutableMapOf(),
-    @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false, updatable = false)
-    var createdAt: Date? = null,
-)
+) : CreatedAuditedEntity()

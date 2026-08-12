@@ -1,5 +1,6 @@
 package no.novari.flyt.instance.model
 
+import no.novari.flyt.audit.entity.CreatedAuditedEntity
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.instance.model.entities.InstanceObject
 import no.novari.flyt.instance.model.entities.InstanceObjectCollection
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.util.Date
 
 class InstanceMappingServiceTest {
@@ -18,7 +20,7 @@ class InstanceMappingServiceTest {
     }
 
     @Test
-    fun testToInstanceObject() {
+    fun `maps dto to instance object entity`() {
         val valuePerKey =
             mutableMapOf(
                 "key1" to "value1",
@@ -44,7 +46,7 @@ class InstanceMappingServiceTest {
     }
 
     @Test
-    fun testToInstanceObjectDto() {
+    fun `maps instance object entity to dto`() {
         val valuePerKey =
             mutableMapOf(
                 "key1" to "value1",
@@ -61,7 +63,6 @@ class InstanceMappingServiceTest {
                             id = 1L,
                             valuePerKey = valuePerKey,
                             objectCollectionPerKey = mutableMapOf(),
-                            createdAt = Date(),
                         ),
                     ),
             )
@@ -74,18 +75,17 @@ class InstanceMappingServiceTest {
                             id = 2L,
                             valuePerKey = valuePerKey,
                             objectCollectionPerKey = mutableMapOf(),
-                            createdAt = Date(),
                         ),
                     ),
             )
 
+        val createdAt = Instant.parse("2026-06-17T10:00:00Z")
         val instanceObject =
             InstanceObject(
                 id = 1L,
                 valuePerKey = valuePerKey,
                 objectCollectionPerKey = objectCollectionPerKey,
-                createdAt = Date(),
-            )
+            ).also { it.setCreatedAt(createdAt) }
 
         val result = instanceMappingService.toInstanceObjectDto(instanceObject)
 
@@ -93,5 +93,13 @@ class InstanceMappingServiceTest {
         assertEquals(instanceObject.id, result.id)
         assertEquals(valuePerKey, result.valuePerKey)
         assertEquals(2, result.objectCollectionPerKey.size)
+        assertEquals(Date.from(createdAt), result.createdAt)
+    }
+
+    private fun InstanceObject.setCreatedAt(createdAt: Instant) {
+        CreatedAuditedEntity::class.java
+            .getDeclaredField("createdAt")
+            .apply { isAccessible = true }
+            .set(this, createdAt)
     }
 }

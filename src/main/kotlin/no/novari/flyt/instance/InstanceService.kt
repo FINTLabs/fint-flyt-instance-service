@@ -8,8 +8,8 @@ import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import org.slf4j.LoggerFactory
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @Service
 class InstanceService(
@@ -32,11 +32,10 @@ class InstanceService(
     }
 
     fun getAllOlderThan(days: Int): List<InstanceObjectDto> {
-        val thresholdDate = LocalDateTime.now().minusDays(days.toLong())
-        val timestamp = Timestamp.valueOf(thresholdDate)
+        val thresholdDate = Instant.now().minus(days.toLong(), ChronoUnit.DAYS)
 
         return instanceRepository
-            .findAllOlderThan(timestamp)
+            .findAllOlderThan(thresholdDate)
             .map(instanceMappingService::toInstanceObjectDto)
     }
 
