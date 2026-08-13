@@ -38,6 +38,11 @@ $ROLE_MAPPING
       - op: add
         path: "/spec/env/-"
         value:
+         name: "novari.telemetry.org-id"
+         value: "$ORG_ID_DOT"
+      - op: add
+        path: "/spec/env/-"
+        value:
          name: "server.servlet.context-path"
          value: "$BASE_PATH"
       - op: replace
