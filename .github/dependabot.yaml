@@ -1,0 +1,59 @@
+version: 2
+updates:
+    - package-ecosystem: gradle
+      directory: "/"
+      schedule:
+          interval: weekly
+          day: wednesday
+          time: "04:30"
+          timezone: "Europe/Oslo"
+      open-pull-requests-limit: 10
+      groups:
+          spring:
+              patterns:
+                  - "org.springframework*"
+          platform-and-tooling:
+              patterns:
+                  - "org.jetbrains.kotlin*"
+                  - "com.github.ben-manes.versions"
+                  - "org.gradle.toolchains.foojay-resolver-convention"
+                  - "org.jlleitschuh.gradle.ktlint"
+          persistence-and-test:
+              patterns:
+                  - "com.h2database*"
+                  - "org.flywaydb*"
+                  - "org.postgresql*"
+                  - "org.testcontainers*"
+          internal:
+              patterns:
+                  - "no.novari*"
+                  - "no.fintlabs*"
+          minor-and-patch:
+              patterns:
+                  - "*"
+              update-types:
+                  - minor
+                  - patch
+      ignore:
+          - dependency-name: "org.springframework*"
+            update-types:
+                - "version-update:semver-major"
+    - package-ecosystem: docker
+      directory: "/"
+      schedule:
+          interval: weekly
+          day: wednesday
+          time: "04:30"
+          timezone: "Europe/Oslo"
+      open-pull-requests-limit: 5
+    - package-ecosystem: github-actions
+      directory: "/"
+      schedule:
+          interval: weekly
+          day: wednesday
+          time: "04:30"
+          timezone: "Europe/Oslo"
+      groups:
+          github-actions:
+              patterns:
+                  - "*"
