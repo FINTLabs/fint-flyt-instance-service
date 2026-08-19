@@ -42,6 +42,11 @@ patches:
       - op: add
         path: "/spec/env/-"
         value:
+         name: "novari.telemetry.org-id"
+         value: "vlfk.no"
+      - op: add
+        path: "/spec/env/-"
+        value:
          name: "server.servlet.context-path"
          value: "/vlfk-no"
       - op: replace

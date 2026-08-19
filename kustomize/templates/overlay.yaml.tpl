@@ -38,6 +38,11 @@ $ROLE_MAPPING
       - op: add
         path: "/spec/env/-"
         value:
+         name: "novari.telemetry.org-id"
+         value: "$ORG_ID_DOT"
+      - op: add
+        path: "/spec/env/-"
+        value:
          name: "server.servlet.context-path"
          value: "$BASE_PATH"
       - op: replace
@@ -51,7 +56,7 @@ $ROLE_MAPPING
         value: "$LIVENESS_PATH"
       - op: replace
         path: "/spec/observability/metrics/path"
-        value: "$METRICS_PATH"
+        value: "$METRICS_PATH"$OTEL_ENV_PATCH
     target:
       kind: Application
       name: fint-flyt-instance-service
