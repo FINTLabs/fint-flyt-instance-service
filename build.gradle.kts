@@ -31,6 +31,7 @@ repositories {
     mavenLocal()
 }
 
+extra["commons-lang3.version"] = "3.18.0"
 extra["jackson-bom.version"] = "2.21.5"
 extra["log4j2.version"] = "2.25.5"
 extra["postgresql.version"] = "42.7.12"
