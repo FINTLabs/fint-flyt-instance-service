@@ -7,6 +7,27 @@ TEMPLATE_PATH="$ROOT/kustomize/templates/overlay.yaml.tpl"
 ROLE_CATALOG_USER_URL="USER"
 ROLE_CATALOG_DEVELOPER_URL="DEVELOPER"
 
+app_instance_suffix() {
+  local namespace="$1"
+  case "$namespace" in
+    bym-oslo-kommune-no)
+      printf '%s' "$namespace"
+      ;;
+    *)
+      printf '%s' "${namespace//-/_}"
+      ;;
+  esac
+}
+
+authorized_org_id() {
+  local namespace="$1"
+  case "$namespace" in
+    *)
+      printf '%s' "${namespace//-/.}"
+      ;;
+  esac
+}
+
 build_role_mapping() {
   local namespace="$1"
   local org_id_dot="$2"
@@ -60,8 +81,7 @@ while IFS= read -r file; do
 
   export NAMESPACE="$namespace"
   export ORG_ID_DOT="${namespace//-/.}"
-  export ORG_ID_UNDERSCORE="${namespace//-/_}"
-  export APP_INSTANCE_LABEL="fint-flyt-instance-service_${ORG_ID_UNDERSCORE}"
+  export APP_INSTANCE_LABEL="fint-flyt-instance-service_$(app_instance_suffix "$namespace")"
   export KAFKA_TOPIC="${NAMESPACE}.flyt.*"
 
   base_path="/${url_prefix}${NAMESPACE}"
@@ -73,7 +93,7 @@ while IFS= read -r file; do
   export METRICS_PATH="${base_path}/actuator/prometheus"
   export FINT_KAFKA_TOPIC_ORGID="${namespace}"
 
-  export ROLE_MAPPING="$(build_role_mapping "$namespace" "$ORG_ID_DOT")"
+  export ROLE_MAPPING="$(build_role_mapping "$namespace" "$(authorized_org_id "$namespace")")"
   if [[ -z "$ROLE_MAPPING" ]]; then
     echo "Unable to determine role mapping for namespace '${namespace}'" >&2
     exit 1
