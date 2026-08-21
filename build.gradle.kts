@@ -32,8 +32,8 @@ repositories {
 }
 
 extra["commons-lang3.version"] = "3.18.0"
-extra["jackson-bom.version"] = "2.21.5"
-extra["log4j2.version"] = "2.25.5"
+extra["jackson-bom.version"] = "2.22.2"
+extra["log4j2.version"] = "2.26.1"
 extra["postgresql.version"] = "42.7.12"
 
 dependencies {
@@ -41,7 +41,7 @@ dependencies {
         implementation("at.yawk.lz4:lz4-java:1.11.2") {
             because("Fixes CVE-2026-59949 in the kafka-clients transitive dependency")
         }
-        testImplementation("org.apache.commons:commons-compress:1.26.0") {
+        testImplementation("org.apache.commons:commons-compress:1.28.0") {
             because("Fixes CVE-2024-25710 and CVE-2024-26308 in the Testcontainers transitive dependency")
         }
     }
