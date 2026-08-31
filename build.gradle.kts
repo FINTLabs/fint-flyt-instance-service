@@ -8,7 +8,7 @@ buildscript {
             classpath("org.apache.httpcomponents.client5:httpclient5:5.6.4")
             classpath("org.apache.httpcomponents.core5:httpcore5:5.4.3")
             classpath("org.apache.httpcomponents.core5:httpcore5-h2:5.4.3")
-            classpath("org.apache.commons:commons-lang3:3.18.0")
+            classpath("org.apache.commons:commons-lang3:3.20.0")
         }
     }
 }
@@ -46,7 +46,7 @@ repositories {
     mavenLocal()
 }
 
-extra["commons-lang3.version"] = "3.18.0"
+extra["commons-lang3.version"] = "3.20.0"
 extra["jackson-bom.version"] = "2.22.2"
 extra["log4j2.version"] = "2.26.1"
 extra["postgresql.version"] = "42.7.12"
