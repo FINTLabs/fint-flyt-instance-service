@@ -66,8 +66,7 @@ class InstanceRequestedForRetryEventProducerService(
         )
     }
 
-    private fun currentActor(): Actor =
-        auditorAware.getCurrentAuditor().orElse(null) ?: Actor.System
+    private fun currentActor(): Actor = auditorAware.getCurrentAuditor().orElse(null) ?: Actor.System
 
     private companion object {
         private const val PARTITIONS = 1
