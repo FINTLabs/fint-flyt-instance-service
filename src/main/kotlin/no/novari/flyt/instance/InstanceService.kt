@@ -64,7 +64,12 @@ class InstanceService(
     }
 
     fun deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders: InstanceFlowHeaders) {
-        instanceRepository.deleteById(instanceFlowHeaders.instanceId)
+        val instanceId =
+            requireNotNull(instanceFlowHeaders.instanceId) {
+                "Instance flow headers must contain instance id when deleting dispatched instance"
+            }
+
+        instanceRepository.deleteById(instanceId)
         instanceDeletedEventProducerService.publish(instanceFlowHeaders)
     }
 }

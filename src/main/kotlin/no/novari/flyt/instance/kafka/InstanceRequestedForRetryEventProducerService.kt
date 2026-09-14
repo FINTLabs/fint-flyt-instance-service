@@ -22,7 +22,7 @@ class InstanceRequestedForRetryEventProducerService(
     instanceFlowTemplateFactory: InstanceFlowTemplateFactory,
     eventTopicService: EventTopicService,
     private val auditorAware: AuditorAware<Actor>,
-    @Value("\${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") retentionTime:
+    @Value($$"${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") retentionTime:
         Duration,
 ) {
     private val instanceFlowTemplate: InstanceFlowTemplate<InstanceObjectDto> =
@@ -66,7 +66,7 @@ class InstanceRequestedForRetryEventProducerService(
         )
     }
 
-    private fun currentActor(): Actor = auditorAware.getCurrentAuditor().orElse(null) ?: Actor.System
+    private fun currentActor(): Actor = auditorAware.currentAuditor.orElse(Actor.System)
 
     private companion object {
         private const val PARTITIONS = 1
