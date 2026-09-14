@@ -1,6 +1,12 @@
 fint:
   application-id: fint-flyt-instance-service
 
+springdoc:
+  api-docs:
+    path: /api/intern/handlinger/instanser/v3/api-docs
+  swagger-ui:
+    path: /api/intern/handlinger/instanser/swagger-ui.html
+
 novari:
   flyt:
     instance-service:

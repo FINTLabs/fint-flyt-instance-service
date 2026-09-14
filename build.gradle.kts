@@ -26,6 +26,8 @@ plugins {
 group = "no.novari"
 version = "0.0.1-SNAPSHOT"
 
+var springdocOpenApiVersion = "2.8.17"
+
 kotlin {
     jvmToolchain(25)
 }
@@ -68,6 +70,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenApiVersion")
     compileOnly("org.springframework.security:spring-security-config")
     compileOnly("org.springframework.security:spring-security-web")
 

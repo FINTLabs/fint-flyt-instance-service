@@ -34,6 +34,14 @@ Base path: `/api/intern/handlinger/instanser`
 
 Errors surface as standard Spring MVC responses: `404 Not Found` when an instance is missing, `500 Internal Server Error` for unexpected issues.
 
+### OpenAPI Documentation
+
+The OpenAPI endpoints are protected by the same OAuth2 rules as the internal API:
+
+- Swagger UI: `/api/intern/handlinger/instanser/swagger-ui.html`
+- OpenAPI JSON: `/api/intern/handlinger/instanser/v3/api-docs`
+- OpenAPI YAML: `/api/intern/handlinger/instanser/v3/api-docs.yaml`
+
 ## Kafka Integration
 
 - Produces the following topics via the FINT Kafka template services:
@@ -138,4 +146,3 @@ The script injects namespace-specific values (base paths, Kafka topics, role map
 4. Add or adjust tests for any new behaviour or edge cases.
 
 FINT Flyt Instance Service is maintained by the FINT Flyt team. Reach out via the internal Slack channel or open an issue in this repository for questions or enhancements.
-
