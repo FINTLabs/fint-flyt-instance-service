@@ -36,11 +36,21 @@ Errors surface as standard Spring MVC responses: `404 Not Found` when an instanc
 
 ### OpenAPI Documentation
 
-The OpenAPI endpoints are protected by the same OAuth2 rules as the internal API:
+Swagger UI and the generated OpenAPI specification are available only through direct service access, such as a
+Kubernetes port-forward. Their paths sit outside the external ingress route for `/api/intern/handlinger/instanser`:
 
-- Swagger UI: `/api/intern/handlinger/instanser/swagger-ui.html`
-- OpenAPI JSON: `/api/intern/handlinger/instanser/v3/api-docs`
-- OpenAPI YAML: `/api/intern/handlinger/instanser/v3/api-docs.yaml`
+- Swagger UI: `/swagger-ui.html`
+- OpenAPI JSON: `/v3/api-docs`
+- OpenAPI YAML: `/v3/api-docs.yaml`
+
+For the FINTLabs beta deployment:
+
+```shell
+kubectl -n fintlabs-no port-forward service/fint-flyt-instance-service 8080:8080
+```
+
+Swagger UI is then available at `http://localhost:8080/beta/fintlabs-no/swagger-ui.html`, and OpenAPI JSON at
+`http://localhost:8080/beta/fintlabs-no/v3/api-docs`.
 
 ## Kafka Integration
 
