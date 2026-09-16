@@ -76,6 +76,27 @@ class InstanceRetryControllerTest {
     }
 
     @Test
+    fun `batch returns ok and publishes retry event for each found instance`() {
+        val firstInstanceId = 123L
+        val secondInstanceId = 456L
+        val firstInstance = InstanceObjectDto(id = firstInstanceId)
+        val secondInstance = InstanceObjectDto(id = secondInstanceId)
+
+        whenever(instanceService.getById(firstInstanceId)).thenReturn(firstInstance)
+        whenever(instanceService.getById(secondInstanceId)).thenReturn(secondInstance)
+        whenever(instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(firstInstanceId))
+            .thenReturn(createInstanceFlowHeaders())
+        whenever(instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(secondInstanceId))
+            .thenReturn(createInstanceFlowHeaders())
+
+        val response = controller.retry(listOf(firstInstanceId, secondInstanceId))
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        verify(instanceRequestedForRetryEventProducerService).publish(any(), eq(firstInstance))
+        verify(instanceRequestedForRetryEventProducerService).publish(any(), eq(secondInstance))
+    }
+
+    @Test
     fun `throws response status exception when instance does not exist`() {
         whenever(instanceService.getById(instanceId)).thenThrow(EntityNotFoundException())
 
@@ -115,12 +136,7 @@ class InstanceRetryControllerTest {
     @Test
     fun `publishes error event and throws internal server error when publishing retry fails`() {
         val instance = InstanceObjectDto()
-        val headers =
-            InstanceFlowHeaders
-                .builder()
-                .sourceApplicationId(1L)
-                .correlationId(UUID.randomUUID())
-                .build()
+        val headers = createInstanceFlowHeaders()
 
         whenever(instanceService.getById(instanceId)).thenReturn(instance)
         whenever(instanceFlowHeadersForRegisteredInstanceRequestProducerService.get(instanceId)).thenReturn(headers)
@@ -133,4 +149,11 @@ class InstanceRetryControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.statusCode)
         verify(instanceRetryRequestErrorProducerService).publishGeneralSystemErrorEvent(any())
     }
+
+    private fun createInstanceFlowHeaders(): InstanceFlowHeaders =
+        InstanceFlowHeaders
+            .builder()
+            .sourceApplicationId(1L)
+            .correlationId(UUID.randomUUID())
+            .build()
 }
