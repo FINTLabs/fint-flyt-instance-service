@@ -34,6 +34,24 @@ Base path: `/api/intern/handlinger/instanser`
 
 Errors surface as standard Spring MVC responses: `404 Not Found` when an instance is missing, `500 Internal Server Error` for unexpected issues.
 
+### OpenAPI Documentation
+
+Swagger UI and the generated OpenAPI specification are available only through direct service access, such as a
+Kubernetes port-forward. Their paths sit outside the external ingress route for `/api/intern/handlinger/instanser`:
+
+- Swagger UI: `/swagger-ui.html`
+- OpenAPI JSON: `/v3/api-docs`
+- OpenAPI YAML: `/v3/api-docs.yaml`
+
+For the FINTLabs beta deployment:
+
+```shell
+kubectl -n fintlabs-no port-forward service/fint-flyt-instance-service 8080:8080
+```
+
+Swagger UI is then available at `http://localhost:8080/beta/fintlabs-no/swagger-ui.html`, and OpenAPI JSON at
+`http://localhost:8080/beta/fintlabs-no/v3/api-docs`.
+
 ## Kafka Integration
 
 - Produces the following topics via the FINT Kafka template services:
@@ -138,4 +156,3 @@ The script injects namespace-specific values (base paths, Kafka topics, role map
 4. Add or adjust tests for any new behaviour or edge cases.
 
 FINT Flyt Instance Service is maintained by the FINT Flyt team. Reach out via the internal Slack channel or open an issue in this repository for questions or enhancements.
-
