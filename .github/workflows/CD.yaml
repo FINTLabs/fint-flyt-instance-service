@@ -29,6 +29,8 @@ jobs:
           {"org":"nfk-no","cluster":"aks-api-fint-2022-02-08"},
           {"org":"ofk-no","cluster":"aks-beta-fint-2021-11-23"},
           {"org":"ofk-no","cluster":"aks-api-fint-2022-02-08"},
+          {"org":"ra-no","cluster":"aks-beta-fint-2021-11-23"},
+          {"org":"ra-no","cluster":"aks-api-fint-2022-02-08"},
           {"org":"rogfk-no","cluster":"aks-beta-fint-2021-11-23"},
           {"org":"rogfk-no","cluster":"aks-api-fint-2022-02-08"},
           {"org":"telemarkfylke-no","cluster":"aks-beta-fint-2021-11-23"},
