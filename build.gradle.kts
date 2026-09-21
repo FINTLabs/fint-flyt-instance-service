@@ -18,15 +18,15 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("io.github.ben-manes.versions") version "0.64.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
-    kotlin("jvm") version "2.4.10"
-    kotlin("plugin.spring") version "2.4.10"
-    kotlin("plugin.jpa") version "2.4.10"
+    kotlin("jvm") version "2.4.20"
+    kotlin("plugin.spring") version "2.4.20"
+    kotlin("plugin.jpa") version "2.4.20"
 }
 
 group = "no.novari"
 version = "0.0.1-SNAPSHOT"
 
-var springdocOpenApiVersion = "2.8.17"
+var springdocOpenApiVersion = "2.9.1"
 
 kotlin {
     jvmToolchain(25)
