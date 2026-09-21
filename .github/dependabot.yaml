@@ -38,6 +38,9 @@ updates:
           - dependency-name: "org.springframework*"
             update-types:
                 - "version-update:semver-major"
+          - dependency-name: "org.springdoc:springdoc-openapi-starter-webmvc-ui"
+            update-types:
+                - "version-update:semver-major"
     - package-ecosystem: docker
       directory: "/"
       schedule:
