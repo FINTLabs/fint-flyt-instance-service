@@ -38,7 +38,8 @@ updates:
           - dependency-name: "org.springframework*"
             update-types:
                 - "version-update:semver-major"
-          - dependency-name: "org.jetbrains.kotlin*"
+          - dependency-name: "jvm"
+          - dependency-name: "plugin.spring"
           - dependency-name: "org.springdoc:springdoc-openapi-starter-webmvc-ui"
             update-types:
                 - "version-update:semver-major"
