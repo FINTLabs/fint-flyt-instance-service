@@ -1,5 +1,6 @@
 package no.novari.flyt.instance
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -11,7 +12,6 @@ import no.novari.flyt.instance.kafka.InstanceRequestedForRetryEventProducerServi
 import no.novari.flyt.instance.kafka.InstanceRetryRequestErrorProducerService
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import no.novari.flyt.webresourceserver.UrlPaths.INTERNAL_API
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -32,7 +32,7 @@ class InstanceRetryController(
     private val instanceRequestedForRetryEventProducerService: InstanceRequestedForRetryEventProducerService,
     private val instanceRetryRequestErrorProducerService: InstanceRetryRequestErrorProducerService,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = KotlinLogging.logger {}
 
     @PostMapping("handlinger/instanser/{instanceId}/prov-igjen")
     @Operation(summary = "Retry an instance", operationId = "retryInstance")
@@ -92,12 +92,15 @@ class InstanceRetryController(
 
                 instanceRequestedForRetryEventProducerService.publish(instanceFlowHeaders, instance)
             } catch (_: EntityNotFoundException) {
-                log.error("Could not find instance with id='{}'", instanceId)
+                log.atError {
+                    message = "Could not find instance with id='{}'"
+                    arguments = arrayOf(instanceId)
+                }
             } catch (e: NoInstanceFlowHeadersException) {
-                log.error(e.message)
+                log.atError { message = e.message }
             } catch (e: Exception) {
                 instanceFlowHeaders?.let(instanceRetryRequestErrorProducerService::publishGeneralSystemErrorEvent)
-                log.error(e.message)
+                log.atError { message = e.message }
             }
         }
 

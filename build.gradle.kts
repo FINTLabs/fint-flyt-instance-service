@@ -69,6 +69,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenApiVersion")
     compileOnly("org.springframework.security:spring-security-config")
@@ -83,6 +84,8 @@ dependencies {
     implementation("no.novari:flyt-web-resource-server:4.0.0")
 
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+    // Pinned to 8.x: 9.x pulls in Jackson 3 (tools.jackson), while Spring Boot 3.5 uses Jackson 2
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.1")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
