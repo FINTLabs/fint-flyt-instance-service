@@ -103,6 +103,8 @@ docker compose down     # stop the environment, keep the data
 docker compose down -v  # stop and wipe the volumes for a clean slate
 ```
 
+Add `--profile tools` to `docker compose up` to also start Kafdrop on http://localhost:19000.
+
 Other useful commands:
 
 ```shell
