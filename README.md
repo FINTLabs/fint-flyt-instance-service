@@ -99,8 +99,7 @@ docker compose up -d                                          # start Postgres a
 The service starts on `localhost:8081`, runs its Flyway migrations against the `fintlabs_no` schema and creates its Kafka topics on startup.
 
 ```shell
-docker compose down     # stop the environment, keep the data
-docker compose down -v  # stop and wipe the volumes for a clean slate
+docker compose down     # stop the environment; topics and database are empty on the next start
 ```
 
 Add `--profile tools` to `docker compose up` to also start Kafdrop on http://localhost:19000.
