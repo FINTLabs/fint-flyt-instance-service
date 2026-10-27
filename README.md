@@ -149,6 +149,20 @@ The script injects namespace-specific values (base paths, Kafka topics, role map
 - `InstanceService.deleteAllOlderThan` publishes deletion events extending tests when altering cleanup semantics.
 - If additional organizations require custom role mappings for overlays, update `script/render-overlay.sh` to reflect the new rules.
 
+## Dependency Locking
+
+The build uses [Gradle dependency locking](https://docs.gradle.org/current/userguide/dependency_locking.html), so every build resolves exactly the same direct and transitive versions. The locked versions live in `gradle.lockfile` (project dependencies) and `buildscript-gradle.lockfile` (Gradle plugins), and both are committed. A pull request therefore shows every transitive version change it causes.
+
+**Automatic (Dependabot):** Dependabot updates the lockfiles in its own pull requests, so no manual step is needed. If two Dependabot pull requests conflict in a lockfile, Dependabot rebases the remaining one after the first is merged. If it does not, comment `@dependabot recreate` on the pull request.
+
+**Manual:** Any change you make by hand that affects dependency resolution requires regenerating the lockfiles. That covers versions, `extra[...]` properties, constraints, adding or removing a dependency, and plugin versions:
+
+```bash
+./gradlew dependencies buildEnvironment --write-locks
+```
+
+Commit the updated lockfiles together with the change. If you forget, the build fails both locally and in CI with an error saying the resolved version "is not part of the dependency lock state".
+
 ## Contributing
 
 1. Create a topic branch for your change.
