@@ -1,7 +1,13 @@
 version: 2
+registries:
+    fintlabs:
+        type: maven-repository
+        url: https://repo.fintlabs.no/releases
 updates:
     - package-ecosystem: gradle
       directory: "/"
+      registries:
+          - fintlabs
       schedule:
           interval: weekly
           day: monday
