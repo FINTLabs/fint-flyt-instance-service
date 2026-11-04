@@ -5,47 +5,55 @@ import no.novari.flyt.instance.InstanceReceivedOffsetException
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeadersMapper
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.consumer.NoOffsetForPartitionException
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
+import org.apache.kafka.clients.consumer.OffsetOutOfRangeException
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.RecordDeserializationException
-import org.apache.kafka.common.errors.TimeoutException
 import org.apache.kafka.common.header.Headers
-import org.hibernate.exception.ConstraintViolationException
 import org.springframework.kafka.listener.CommonContainerStoppingErrorHandler
+import org.springframework.kafka.listener.DefaultErrorHandler
+import org.springframework.kafka.listener.ListenerUtils
 import org.springframework.kafka.listener.MessageListenerContainer
-import java.sql.SQLException
+import org.springframework.util.backoff.FixedBackOff
 
 class InstanceReceivedErrorHandler(
     private val handler: InstanceReceivedHandler,
     private val headersMapper: InstanceFlowHeadersMapper,
-) : CommonContainerStoppingErrorHandler() {
-    private val logger = KotlinLogging.logger {}
+) : DefaultErrorHandler(FixedBackOff(5_000, FixedBackOff.UNLIMITED_ATTEMPTS)) {
+    private val consumerLogger = KotlinLogging.logger {}
+    private val stopping = CommonContainerStoppingErrorHandler()
 
-    override fun isAckAfterHandle(): Boolean = false
+    init {
+        isAckAfterHandle = false
+        setSeekAfterError(false)
+        setClassifications(emptyMap(), true)
+    }
 
-    override fun handleRemaining(
+    override fun handleOne(
         thrownException: Exception,
-        records: List<ConsumerRecord<*, *>>,
+        record: ConsumerRecord<*, *>,
         consumer: Consumer<*, *>,
         container: MessageListenerContainer,
-    ) {
-        val record = records.firstOrNull()
-        if (record != null && unreadableHeaders(record.headers())) {
-            skip(
+    ): Boolean {
+        if (fatalPositionFailure(thrownException)) {
+            stop(thrownException, consumer, container)
+            return false
+        }
+        if (unreadableHeaders(record.headers())) {
+            return skip(
                 TopicPartition(record.topic(), record.partition()),
                 record.offset(),
                 record.headers(),
                 consumer,
                 container,
             )
-            return
         }
-        val safeFailure = safeDiagnosticCause(thrownException)
-        logger.error(safeFailure) {
-            "Stopping instance-received consumer: topic=${record?.topic()}, " +
-                "partition=${record?.partition()}, offset=${record?.offset()}"
+        consumerLogger.error(thrownException) {
+            "Retrying instance-received processing: topic=${record.topic()}, " +
+                "partition=${record.partition()}, offset=${record.offset()}"
         }
-        super.handleRemaining(safeFailure, records, consumer, container)
+        return super.handleOne(thrownException, record, consumer, container)
     }
 
     override fun handleOtherException(
@@ -54,6 +62,10 @@ class InstanceReceivedErrorHandler(
         container: MessageListenerContainer,
         batchListener: Boolean,
     ) {
+        if (fatalPositionFailure(thrownException)) {
+            stop(thrownException, consumer, container)
+            return
+        }
         if (thrownException is RecordDeserializationException) {
             skip(
                 thrownException.topicPartition(),
@@ -64,9 +76,15 @@ class InstanceReceivedErrorHandler(
             )
             return
         }
-        val safeFailure = safeDiagnosticCause(thrownException)
-        logger.error(safeFailure) { "Stopping instance-received consumer after assignment or consumer failure" }
-        super.handleOtherException(safeFailure, consumer, container, batchListener)
+        consumerLogger.error(thrownException) { "Retrying instance-received assignment or polling after failure" }
+        if (container.isRunning &&
+            generateSequence(thrownException as Throwable) { it.cause }.any {
+                it is InstanceReceivedAssignmentException
+            }
+        ) {
+            consumer.enforceRebalance()
+        }
+        ListenerUtils.stoppableSleep(container, 5_000)
     }
 
     private fun unreadableHeaders(headers: Headers): Boolean =
@@ -83,33 +101,41 @@ class InstanceReceivedErrorHandler(
         headers: Headers?,
         consumer: Consumer<*, *>,
         container: MessageListenerContainer,
-    ) {
+    ): Boolean {
         try {
             val nextOffset = Math.incrementExact(offset)
             handler.reject(partition, offset, headers)
             consumer.seek(partition, nextOffset)
             consumer.commitSync(mapOf(partition to OffsetAndMetadata(nextOffset)))
         } catch (failure: Exception) {
-            val safeFailure = safeDiagnosticCause(failure)
-            logger.error(safeFailure) { "Cannot skip instance-received message for $partition, offset=$offset" }
-            super.handleOtherException(safeFailure, consumer, container, false)
-            return
+            if (fatalPositionFailure(failure)) {
+                stop(failure, consumer, container)
+                return false
+            }
+            consumerLogger.error(
+                failure,
+            ) { "Retrying rejection of instance-received message for $partition, offset=$offset" }
+            ListenerUtils.stoppableSleep(container, 5_000)
+            return false
         }
-        logger.warn { "Skipped invalid instance-received message for $partition, offset=$offset" }
+        consumerLogger.warn { "Skipped invalid instance-received message for $partition, offset=$offset" }
+        return true
     }
-}
 
-internal fun safeDiagnosticCause(failure: Throwable): RuntimeException {
-    val diagnostic =
-        when (failure) {
-            is InstanceReceivedOffsetException -> failure.message
-            is SQLException -> "${failure.javaClass.name}, SQLSTATE=${failure.sqlState}"
-            is ConstraintViolationException -> "${failure.javaClass.name}, constraint=${failure.constraintName}"
-            is TimeoutException -> "${failure.javaClass.name}: ${failure.message}"
-            else -> failure.javaClass.name
+    private fun fatalPositionFailure(failure: Throwable): Boolean =
+        generateSequence(failure) { it.cause }.any {
+            it is InstanceReceivedOffsetException || it is NoOffsetForPartitionException ||
+                it is OffsetOutOfRangeException
         }
-    return RuntimeException(diagnostic, failure.cause?.let(::safeDiagnosticCause)).also { safe ->
-        safe.stackTrace = failure.stackTrace
-        failure.suppressed.forEach { safe.addSuppressed(safeDiagnosticCause(it)) }
+
+    private fun stop(
+        failure: Exception,
+        consumer: Consumer<*, *>,
+        container: MessageListenerContainer,
+    ) {
+        consumerLogger.error(failure) {
+            "Stopping instance-received consumer because its starting position is invalid or taken over"
+        }
+        stopping.handleOtherException(failure, consumer, container, false)
     }
 }

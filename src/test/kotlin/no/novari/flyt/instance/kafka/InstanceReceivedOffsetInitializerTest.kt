@@ -19,8 +19,9 @@ import org.springframework.dao.DataAccessResourceFailureException
 
 class InstanceReceivedOffsetInitializerTest {
     private val repository = mock<InstanceReceivedOffsetRepository>()
+    private val handler = mock<InstanceReceivedHandler>()
     private val consumer = mock<Consumer<String, Any>>()
-    private val initializer = InstanceReceivedOffsetInitializer(repository)
+    private val initializer = InstanceReceivedOffsetInitializer(repository, handler)
     private val partition = TopicPartition("afk-no.flyt.instance-received", 0)
 
     @BeforeEach
@@ -64,12 +65,11 @@ class InstanceReceivedOffsetInitializerTest {
         val failure = DataAccessResourceFailureException("database unavailable")
         whenever(repository.initialize(partition, 42)).thenThrow(failure)
 
-        assertSame(
-            failure,
-            assertThrows(DataAccessResourceFailureException::class.java) {
+        val assignmentFailure =
+            assertThrows(InstanceReceivedAssignmentException::class.java) {
                 initializer.onPartitionsAssigned(consumer, listOf(partition))
-            },
-        )
+            }
+        assertSame(failure, assignmentFailure.cause)
     }
 
     @Test
@@ -90,6 +90,22 @@ class InstanceReceivedOffsetInitializerTest {
     fun `empty assignment performs no work`() {
         initializer.onPartitionsAssigned(consumer, emptyList())
 
+        verifyNoInteractions(repository, consumer)
+    }
+
+    @Test
+    fun `revocation discards only pending work for the revoked partitions`() {
+        initializer.onPartitionsRevokedBeforeCommit(consumer, listOf(partition))
+
+        verify(handler).clearPending(listOf(partition))
+        verifyNoInteractions(repository, consumer)
+    }
+
+    @Test
+    fun `lost assignment discards pending work`() {
+        initializer.onPartitionsLost(consumer, listOf(partition))
+
+        verify(handler).clearPending(listOf(partition))
         verifyNoInteractions(repository, consumer)
     }
 }

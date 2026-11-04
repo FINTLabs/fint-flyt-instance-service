@@ -72,23 +72,31 @@ partitions. Existing progress is preserved. A missing group position is an error
 earliest/latest fallback. Initialization reflects the legacy group's previous processing policy.
 
 After saving, registration waits for the library producer's broker confirmation before checkpointing.
-Saving, sending, and checkpointing have separate transactions; a crash between them may cause duplicates.
-Completed records are skipped on redelivery. One record is polled at a time, with auto-commit disabled;
-`max.poll.interval.ms` must accommodate producer delivery and database work.
+If saving or publishing `instance-registered` fails, the existing `instance-error` event is published
+instead. Publication failures include the saved instance ID in the error headers. Processing continues
+after the error is confirmed and the position is stored. Completed records are skipped on redelivery.
+One record is polled at a time, with auto-commit disabled; `max.poll.interval.ms` must accommodate
+producer delivery and database work.
 
 Null or unreadable payloads produce the existing registration error when flow headers can be read.
 Unreadable headers are logged using record coordinates, without fabricating history. Invalid messages
 are skipped automatically: the database position is advanced before Kafka seeks and commits the next
 position. Manual edits of either database or Kafka offsets are not needed for malformed input.
 
-Publication, checkpoint, and assignment failures still stop this consumer without passing unresolved
-work. Restore the connection or required privileges and restart processing; moving offsets is not a
-repair for infrastructure failures. Logs preserve technical coordinates, Kafka timeout details and
-SQLSTATE while redacting exception text that may contain payloads.
+If publishing the error or storing the position fails, the consumer retries automatically with a
+five-second backoff. It retains the saved result and confirmed publication in memory for the active
+assignment, so retries do not save the instance or repeat a confirmed publication. Polling and temporary
+assignment failures also retry; no manual restart is needed after connectivity or privileges recover.
+Position and Kafka commits remain unchanged until the pending work completes. Failures awaiting retry
+are logged with their original cause; invalid message content is not explicitly written to logs.
+
+Saving, sending, and checkpointing have separate transactions. The temporary state is discarded on
+partition revocation or loss. Crashes, rebalances and ambiguous publication outcomes can still cause
+duplicates; this is not a durable outbox or an exactly-once guarantee.
 
 `cluster_id` and `topic_id` stay NULL until handover. Instance-service refuses processing once
-history-service has assigned identity. Stop and drain the old writer before binding and starting the
-new owner. This application does not configure external alerts or change REST health probes.
+history-service has assigned identity. Missing or out-of-range starting positions also stop processing
+rather than guessing an offset. Stop and drain the old writer before binding and starting the new owner.
 
 #### Database permissions
 
@@ -120,8 +128,8 @@ SELECT
     has_table_privilege(current_user, 'afk_no_fint_flyt_history_service_db.instance_received_offset', 'UPDATE') AS table_update;
 ```
 
-All four privilege checks must return true. Missing tables or privileges stop received-event processing;
-the application does not silently disable checkpointing.
+All four privilege checks must return true. Missing tables or privileges prevent progress and produce
+retries; checkpointing is never silently disabled.
 
 #### Transition to history-service
 

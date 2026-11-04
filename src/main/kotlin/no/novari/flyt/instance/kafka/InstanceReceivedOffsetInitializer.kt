@@ -8,19 +8,44 @@ import org.springframework.kafka.listener.ConsumerAwareRebalanceListener
 
 class InstanceReceivedOffsetInitializer(
     private val offsetRepository: InstanceReceivedOffsetRepository,
+    private val handler: InstanceReceivedHandler,
 ) : ConsumerAwareRebalanceListener {
     override fun onPartitionsAssigned(
         consumer: Consumer<*, *>,
         partitions: Collection<TopicPartition>,
     ) {
-        val missing = partitions.filter { offsetRepository.findNextOffset(it) == null }.toSet()
-        if (missing.isEmpty()) return
-        val committed = consumer.committed(missing)
-        missing.forEach { partition ->
-            val position =
-                committed[partition]
-                    ?: throw InstanceReceivedOffsetException("No committed Kafka position exists for $partition")
-            offsetRepository.initialize(partition, position.offset())
+        try {
+            val missing = partitions.filter { offsetRepository.findNextOffset(it) == null }.toSet()
+            if (missing.isEmpty()) return
+            val committed = consumer.committed(missing)
+            missing.forEach { partition ->
+                val position =
+                    committed[partition]
+                        ?: throw InstanceReceivedOffsetException("No committed Kafka position exists for $partition")
+                offsetRepository.initialize(partition, position.offset())
+            }
+        } catch (failure: InstanceReceivedOffsetException) {
+            throw failure
+        } catch (failure: Exception) {
+            throw InstanceReceivedAssignmentException(failure)
         }
     }
+
+    override fun onPartitionsRevokedBeforeCommit(
+        consumer: Consumer<*, *>,
+        partitions: Collection<TopicPartition>,
+    ) {
+        handler.clearPending(partitions)
+    }
+
+    override fun onPartitionsLost(
+        consumer: Consumer<*, *>,
+        partitions: Collection<TopicPartition>,
+    ) {
+        handler.clearPending(partitions)
+    }
 }
+
+class InstanceReceivedAssignmentException(
+    cause: Exception,
+) : RuntimeException("Instance-received assignment failed", cause)

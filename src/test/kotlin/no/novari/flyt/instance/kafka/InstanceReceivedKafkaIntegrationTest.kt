@@ -24,6 +24,8 @@ import no.novari.kafka.topic.name.TopicNamePatternService
 import no.novari.kafka.topic.name.TopicNameService
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.AdminClientConfig
+import org.apache.kafka.clients.admin.AlterConfigOp
+import org.apache.kafka.clients.admin.ConfigEntry
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.admin.OffsetSpec
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -34,6 +36,7 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.header.Header
 import org.apache.kafka.common.header.internals.RecordHeader
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -43,6 +46,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -112,7 +116,7 @@ class InstanceReceivedKafkaIntegrationTest {
     @BeforeEach
     fun setUp() {
         adminJdbc.execute("TRUNCATE history_test.instance_received_offset")
-        adminJdbc.execute("GRANT UPDATE ON history_test.instance_received_offset TO instance_writer")
+        adminJdbc.execute("GRANT SELECT, UPDATE ON history_test.instance_received_offset TO instance_writer")
         whenever(service.save(any())).thenAnswer {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive())
             InstanceObjectDto(id = 123L)
@@ -193,23 +197,30 @@ class InstanceReceivedKafkaIntegrationTest {
     }
 
     @Test
-    fun `broker rejection stops before later records and does not commit failed progress`() {
+    fun `failed registered publication produces errors and later records continue`() {
         withConsumer(failPublication = true) { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 0)
 
             send("{}")
             send("{}")
-            awaitStopped(context)
+            awaitPosition(repository, 2)
 
-            assertEquals(0L, repository.findNextOffset(partition))
-            assertEquals(0L, committedOffset())
-            verify(service, times(1)).save(any())
+            await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
+            assertEquals(2L, publishedErrors())
+            assertTrue(
+                context
+                    .getBean(
+                        "instanceReceivedEventConsumer",
+                        ConcurrentMessageListenerContainer::class.java,
+                    ).isRunning,
+            )
+            verify(service, times(2)).save(any())
         }
     }
 
     @Test
-    fun `database failure after publication stops without skipping to the next record`() {
+    fun `database recovery resumes without saving or publishing the first instance again`() {
         withConsumer { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 0)
@@ -217,10 +228,90 @@ class InstanceReceivedKafkaIntegrationTest {
 
             send("{}")
             send("{}")
-            awaitStopped(context)
+            await().pollDelay(Duration.ofSeconds(1)).atMost(Duration.ofSeconds(10)).untilAsserted {
+                assertEquals(0L, repository.findNextOffset(partition))
+                assertEquals(1L, publishedRecords(registeredTopic))
+                verify(service, times(1)).save(any())
+                assertTrue(
+                    context
+                        .getBean(
+                            "instanceReceivedEventConsumer",
+                            ConcurrentMessageListenerContainer::class.java,
+                        ).isRunning,
+                )
+            }
 
-            assertEquals(0L, repository.findNextOffset(partition))
-            assertEquals(0L, committedOffset())
+            adminJdbc.execute("GRANT UPDATE ON history_test.instance_received_offset TO instance_writer")
+            awaitPosition(repository, 2)
+
+            assertEquals(2L, publishedRecords(registeredTopic))
+            verify(service, times(2)).save(any())
+        }
+    }
+
+    @Test
+    fun `failed error publication is retried automatically without saving again`() {
+        withConsumer(failPublication = true, failErrorPublication = true) { context ->
+            val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
+            awaitPosition(repository, 0)
+            send("{}")
+
+            await().pollDelay(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(10)).untilAsserted {
+                assertEquals(0L, repository.findNextOffset(partition))
+                verify(service, times(1)).save(any())
+                assertTrue(
+                    context
+                        .getBean(
+                            "instanceReceivedEventConsumer",
+                            ConcurrentMessageListenerContainer::class.java,
+                        ).isRunning,
+                )
+            }
+
+            admin().use {
+                it
+                    .incrementalAlterConfigs(
+                        mapOf(
+                            ConfigResource(ConfigResource.Type.TOPIC, errorTopic) to
+                                listOf(
+                                    AlterConfigOp(
+                                        ConfigEntry("max.message.bytes", "1048576"),
+                                        AlterConfigOp.OpType.SET,
+                                    ),
+                                ),
+                        ),
+                    ).all()
+                    .get(10, TimeUnit.SECONDS)
+            }
+            awaitPosition(repository, 1)
+            verify(service, times(1)).save(any())
+
+            send("{}")
+            awaitPosition(repository, 2)
+            assertEquals(2L, publishedErrors())
+            verify(service, times(2)).save(any())
+        }
+    }
+
+    @Test
+    fun `assignment recovers after database access is restored without restarting`() {
+        withConsumer(denyReadAtStartup = true) { context ->
+            val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
+            send("{}")
+            await().pollDelay(Duration.ofSeconds(1)).atMost(Duration.ofSeconds(10)).untilAsserted {
+                assertTrue(
+                    context
+                        .getBean(
+                            "instanceReceivedEventConsumer",
+                            ConcurrentMessageListenerContainer::class.java,
+                        ).isRunning,
+                )
+                verifyNoInteractions(service)
+            }
+
+            adminJdbc.execute("GRANT SELECT ON history_test.instance_received_offset TO instance_writer")
+            awaitPosition(repository, 1)
+
             verify(service, times(1)).save(any())
         }
     }
@@ -305,14 +396,18 @@ class InstanceReceivedKafkaIntegrationTest {
         committed: Long? = 0,
         initialPosition: Long? = null,
         failPublication: Boolean = false,
+        failErrorPublication: Boolean = false,
+        denyReadAtStartup: Boolean = false,
         action: (AssertableApplicationContext) -> Unit,
     ) {
         admin().use { admin ->
             val registered = NewTopic(registeredTopic, 1, 1.toShort())
+            val errors = NewTopic(errorTopic, 1, 1.toShort())
             if (failPublication) registered.configs(mapOf("max.message.bytes" to "64"))
+            if (failErrorPublication) errors.configs(mapOf("max.message.bytes" to "64"))
             admin
                 .createTopics(
-                    listOf(NewTopic(sourceTopic, 1, 1.toShort()), registered, NewTopic(errorTopic, 1, 1.toShort())),
+                    listOf(NewTopic(sourceTopic, 1, 1.toShort()), registered, errors),
                 ).all()
                 .get(15, TimeUnit.SECONDS)
             if (committed != null) {
@@ -328,6 +423,9 @@ class InstanceReceivedKafkaIntegrationTest {
                 sourceTopic,
                 initialPosition,
             )
+        }
+        if (denyReadAtStartup) {
+            adminJdbc.execute("REVOKE SELECT ON history_test.instance_received_offset FROM instance_writer")
         }
         val topicNames = mock<TopicNameService>()
         whenever(topicNames.validateAndMapToTopicName(any())).thenAnswer {
@@ -429,9 +527,11 @@ class InstanceReceivedKafkaIntegrationTest {
                 ?.offset()
         }
 
-    private fun publishedErrors(): Long =
+    private fun publishedErrors(): Long = publishedRecords(errorTopic)
+
+    private fun publishedRecords(topic: String): Long =
         admin().use {
-            val output = TopicPartition(errorTopic, 0)
+            val output = TopicPartition(topic, 0)
             it
                 .listOffsets(
                     mapOf(output to OffsetSpec.latest()),

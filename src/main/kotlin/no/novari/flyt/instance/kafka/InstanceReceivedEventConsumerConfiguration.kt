@@ -77,7 +77,8 @@ class InstanceReceivedEventConsumerConfiguration(
             isMissingTopicsFatal = true
             kafkaConsumerProperties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
             kafkaConsumerProperties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "none")
-            consumerRebalanceListener = InstanceReceivedOffsetInitializer(offsetRepository)
+            consumerRebalanceListener = InstanceReceivedOffsetInitializer(offsetRepository, instanceReceivedHandler)
+            authExceptionRetryInterval = Duration.ofSeconds(5)
         }
         return container
     }

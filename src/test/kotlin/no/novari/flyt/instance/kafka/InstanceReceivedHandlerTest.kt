@@ -16,13 +16,16 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.dao.DataAccessResourceFailureException
 import org.springframework.kafka.support.SendResult
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -56,7 +59,7 @@ class InstanceReceivedHandlerTest {
         whenever(repository.findNextOffset(partition)).thenReturn(42L)
         whenever(service.save(input)).thenReturn(saved)
         whenever(registeredProducer.publish(any(), eq(saved))).thenReturn(registered)
-        whenever(errorProducer.publishGeneralSystemErrorEvent(headers)).thenReturn(rejected)
+        whenever(errorProducer.publishGeneralSystemErrorEvent(any())).thenReturn(rejected)
     }
 
     @Test
@@ -122,24 +125,26 @@ class InstanceReceivedHandlerTest {
     }
 
     @Test
-    fun `synchronous publication failure is not converted to a registration error`() {
+    fun `synchronous publication failure publishes an error for the saved instance and advances`() {
         whenever(registeredProducer.publish(any(), eq(saved))).thenThrow(IllegalStateException("broker unavailable"))
 
-        assertThrows(IllegalStateException::class.java) { handler.handle(record()) }
+        handler.handle(record())
 
-        verify(repository, never()).advance(any(), any())
-        verifyNoInteractions(errorProducer)
+        verify(errorProducer).publishGeneralSystemErrorEvent(headers.toBuilder().instanceId(saved.id).build())
+        verify(repository).advance(partition, 43)
     }
 
     @Test
-    fun `failed broker confirmation neither advances nor publishes a second event`() {
+    fun `failed broker confirmation publishes a registration error before advancing`() {
         whenever(registeredProducer.publish(any(), eq(saved)))
             .thenReturn(CompletableFuture.failedFuture(IllegalStateException("broker unavailable")))
 
-        assertThrows(ExecutionException::class.java) { handler.handle(record()) }
+        handler.handle(record())
 
-        verify(repository, never()).advance(any(), any())
-        verifyNoInteractions(errorProducer)
+        inOrder(errorProducer, repository) {
+            verify(errorProducer).publishGeneralSystemErrorEvent(headers.toBuilder().instanceId(saved.id).build())
+            verify(repository).advance(partition, 43)
+        }
     }
 
     @Test
@@ -154,12 +159,52 @@ class InstanceReceivedHandlerTest {
     }
 
     @Test
-    fun `checkpoint failure after broker confirmation is propagated without error publication`() {
-        whenever(repository.advance(partition, 43)).thenThrow(InstanceReceivedOffsetException("write failed"))
+    fun `checkpoint retry does not save or publish the instance again`() {
+        doThrow(DataAccessResourceFailureException("write failed"))
+            .doNothing()
+            .whenever(repository)
+            .advance(partition, 43)
 
-        assertThrows(InstanceReceivedOffsetException::class.java) { handler.handle(record()) }
+        assertThrows(DataAccessResourceFailureException::class.java) { handler.handle(record()) }
+        handler.handle(record())
 
+        verify(service, times(1)).save(input)
+        verify(registeredProducer, times(1)).publish(any(), eq(saved))
+        verify(repository, times(2)).advance(partition, 43)
         verifyNoInteractions(errorProducer)
+    }
+
+    @Test
+    fun `retrying a failed error publication does not repeat saving or registered publication`() {
+        whenever(registeredProducer.publish(any(), eq(saved)))
+            .thenReturn(CompletableFuture.failedFuture(IllegalStateException("registration publication failed")))
+        whenever(errorProducer.publishGeneralSystemErrorEvent(any()))
+            .thenReturn(CompletableFuture.failedFuture(IllegalStateException("broker unavailable")), rejected)
+
+        assertThrows(ExecutionException::class.java) { handler.handle(record()) }
+        verify(repository, never()).advance(any(), any())
+        handler.handle(record())
+
+        verify(service, times(1)).save(input)
+        verify(registeredProducer, times(1)).publish(any(), eq(saved))
+        verify(errorProducer, times(2)).publishGeneralSystemErrorEvent(headers.toBuilder().instanceId(saved.id).build())
+        verify(repository).advance(partition, 43)
+    }
+
+    @Test
+    fun `checkpoint retry after error publication does not publish the error again`() {
+        whenever(service.save(input)).thenThrow(IllegalArgumentException("invalid source data"))
+        doThrow(DataAccessResourceFailureException("write failed"))
+            .doNothing()
+            .whenever(repository)
+            .advance(partition, 43)
+
+        assertThrows(DataAccessResourceFailureException::class.java) { handler.handle(record()) }
+        handler.handle(record())
+
+        verify(service, times(1)).save(input)
+        verify(errorProducer, times(1)).publishGeneralSystemErrorEvent(headers)
+        verify(repository, times(2)).advance(partition, 43)
     }
 
     @Test
