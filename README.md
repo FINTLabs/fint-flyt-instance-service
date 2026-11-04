@@ -60,6 +60,100 @@ Swagger UI is then available at `http://localhost:8080/beta/fintlabs-no/swagger-
 - Consumes instance lifecycle events through `InstanceReceivedEventConsumerConfiguration` and `InstanceDispatchedConsumerConfiguration` to coordinate retries and header lookups.
 - Topic retention is governed by `novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` (default four days). A millisecond suffix variant (`...-retention-time-ms`) is also supported for services that require explicit units.
 
+### Instance-received progress and handover
+
+Instance-service writes one position per `instance-received` topic and partition to
+`<history-schema>.instance_received_offset`. The table belongs to history-service and must already
+exist in the same PostgreSQL database. Its V9 and V10 migrations remain owned by history-service;
+instance-service neither creates the table nor changes its own Flyway schema.
+
+Configure `novari.flyt.instance-service.database.history-schema` through `HISTORY_DATABASE_SCHEMA`.
+Every deployment overlay supplies an explicit organization-specific value, including beta. For AFK
+the value is `afk_no_fint_flyt_history_service_db`. The schema is validated and quoted explicitly;
+the datasource and instance entity mappings are unchanged.
+
+The received-event consumer keeps its existing application-default group. On partition assignment,
+a missing row is initialized from that group's committed Kafka offset, without adding one. This
+also initializes idle partitions. Existing rows are preserved. If both the row and committed Kafka
+position are absent, consumption stops; there is no automatic earliest/latest fallback, seek, or
+Kafka group-offset reset. The initial committed position reflects the legacy consumer's previous
+behavior, including its former skip-failed-records policy; it does not repair past processing failures.
+
+After saving an instance, the consumer waits for the existing library producer's `instance-registered`
+publication to be confirmed by the broker. If saving fails or produces no ID, it waits for confirmation
+of the existing registration error instead. Only then does a short database transaction store the
+record's offset plus one and update `updated_at`. Kafka sending and waiting take place outside database
+transactions. The producer futures use the library's delivery settings; there is no additional short
+acknowledgement timeout. This waiting is specific to registration, not the manual retry API.
+
+The consumer polls one record at a time and commits Kafka offsets after each successfully handled
+record, with auto-commit disabled. Ensure `max.poll.interval.ms` accommodates the producer's
+`max.block.ms`, `delivery.timeout.ms`, and database work. Already completed records below the stored
+position are skipped, and database progress never moves backwards. Kafka offsets may contain gaps.
+Publication failures, checkpoint failures, unreadable input, or assignment failures stop this consumer
+instead of skipping the record. Later records cannot advance the position past that failure. Other
+consumers and REST endpoints retain their existing behavior. Error logs contain record coordinates
+and sanitized technical causes, without the payload.
+
+Instance-service leaves `cluster_id` and `topic_id` NULL. A row with either identity assigned is
+considered taken over by history-service: instance-service refuses further processing and writes.
+Stop and drain instance-service before history-service assigns these identities. This check does not
+replace the requirement for a single processing owner during the transition.
+
+This is a progress checkpoint, not a distributed transaction or outbox. A crash between saving,
+publishing, and checkpointing can still cause redelivery and duplicate instances or events. Restart
+does not automatically retry a saved-but-unpublished instance using its original ID. Before handover,
+resolve any stopped processing and verify that no publication or database update is outstanding.
+
+#### Database permissions
+
+Grant privileges before deploying the writer. Run the following in the shared `fint-flyt` database as
+an object owner or administrator with grant privileges. Replace `INSTANCE_SERVICE_DB_ROLE` with the
+actual role from instance-service's database credentials; do not assume the role equals the schema name.
+
+```sql
+GRANT USAGE
+ON SCHEMA afk_no_fint_flyt_history_service_db
+TO "INSTANCE_SERVICE_DB_ROLE";
+
+GRANT SELECT, INSERT, UPDATE
+ON TABLE afk_no_fint_flyt_history_service_db.instance_received_offset
+TO "INSTANCE_SERVICE_DB_ROLE";
+```
+
+Use the corresponding history schema and instance-service role for every organization and environment.
+No sequence, CREATE, DELETE, or schema ownership privileges are required. Check the grants while
+connected as instance-service's role:
+
+```sql
+SELECT current_user;
+
+SELECT
+    has_schema_privilege(current_user, 'afk_no_fint_flyt_history_service_db', 'USAGE') AS schema_usage,
+    has_table_privilege(current_user, 'afk_no_fint_flyt_history_service_db.instance_received_offset', 'SELECT') AS table_select,
+    has_table_privilege(current_user, 'afk_no_fint_flyt_history_service_db.instance_received_offset', 'INSERT') AS table_insert,
+    has_table_privilege(current_user, 'afk_no_fint_flyt_history_service_db.instance_received_offset', 'UPDATE') AS table_update;
+```
+
+All four privilege checks must return true. Missing tables or privileges stop received-event processing;
+the application does not silently disable checkpointing.
+
+#### Transition to history-service
+
+1. Apply the history-service migrations and the grants above before deploying this writer. Keep
+   history-service's instance functionality disabled.
+2. Deploy instance-service and verify a row for every received-event partition and advancing progress
+   when messages are processed. Resolve any consumer stop before proceeding.
+3. Stop instance-service's received-event processing and drain in-flight work. Shutdown must allow the
+   configured producer delivery and checkpoint transactions to finish; do not capture a final position
+   from a forcibly terminated process with unresolved work.
+4. Have history-service validate the stored positions against broker boundaries and assign the real
+   cluster/topic identities using its existing position service. Start it as the only processing owner.
+
+Normal handover does not require manually editing this table or resetting Kafka group offsets.
+After identity binding, restarting the legacy received-event consumer is rejected; rollback requires
+a verified transition rather than blindly starting the old deployment.
+
 ## Scheduled Tasks
 
 `InstanceCleanupService.cleanUp()` runs every 24 hours (initial delay 30 seconds) and deletes instances older than `novari.flyt.instance-service.time-to-keep-instance-in-days` (defaults to 60). When a record is removed the service publishes `instance-deleted` events.
@@ -70,14 +164,15 @@ The application composes the shared Spring profiles `flyt-kafka`, `flyt-logging`
 
 Key properties:
 
-| Property                                                                             | Description |
-|--------------------------------------------------------------------------------------| --- |
-| `fint.application-id`                                                                | Defaults to `fint-flyt-instance-service`. |
-| `novari.flyt.instance-service.time-to-keep-instance-in-days`                         | Retention window used by the cleanup job (default 60). |
-| `novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` | Duration string used to configure Kafka topic retention (default `4d`). |
+| Property                                                                             | Description                                                                                 |
+|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `fint.application-id`                                                                | Defaults to `fint-flyt-instance-service`.                                                   |
+| `novari.flyt.instance-service.time-to-keep-instance-in-days`                         | Retention window used by the cleanup job (default 60).                                      |
+| `novari.flyt.instance-service.database.history-schema`                               | Explicit existing history schema, supplied by `HISTORY_DATABASE_SCHEMA`.                    |
+| `novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` | Duration string used to configure Kafka topic retention (default `4d`).                     |
 | `spring.datasource.*`                                                                | Provide JDBC connection details for Postgres; overlays inject environment-specific secrets. |
-| `spring.security.oauth2.resourceserver.jwt.issuer-uri`                               | OAuth issuer for protected internal endpoints. |
-| `novari.flyt.web-resource-server.security.api.internal-client`                       | Defines clients permitted to call internal APIs. |
+| `spring.security.oauth2.resourceserver.jwt.issuer-uri`                               | OAuth issuer for protected internal endpoints.                                              |
+| `novari.flyt.web-resource-server.security.api.internal-client`                       | Defines clients permitted to call internal APIs.                                            |
 
 Secrets referenced in Kustomize overlays must provide database credentials, OAuth settings, and Kafka access.
 
@@ -89,14 +184,19 @@ Prerequisites:
 - Docker (for the bundled Postgres and Kafka environment)
 - Gradle (wrapper included)
 
-`docker-compose.yaml` provides everything the service needs locally — Postgres on `localhost:5433` (including the `fintlabs_no` schema the service expects) and a single-node Kafka broker on `localhost:9092`. Both match the settings in `application-local-staging.yaml`.
+`docker-compose.yaml` provides local Postgres on `localhost:5433` (including the `fintlabs_no` instance schema) and a single-node Kafka broker on `localhost:9092`. Both match the settings in `application-local-staging.yaml`. The additional history-table prerequisites are described below.
 
 ```shell
 docker compose up -d                                          # start Postgres and Kafka
-./gradlew bootRun --args='--spring.profiles.active=local-staging'
+HISTORY_DATABASE_SCHEMA=fintlabs_no_fint_flyt_history_service_db ./gradlew bootRun --args='--spring.profiles.active=local-staging'
 ```
 
 The service starts on `localhost:8081`, runs its Flyway migrations against the `fintlabs_no` schema and creates its Kafka topics on startup.
+
+Received-event processing additionally requires the history offset table in that same local database
+and an established group position as described above. The instance-service Compose setup does not
+apply history-service migrations or choose initial offsets for a fresh broker. The cross-schema
+PostgreSQL and Kafka integration tests supply isolated fixtures for this transition behavior.
 
 ```shell
 docker compose down     # stop the environment; topics and database are empty on the next start
@@ -166,7 +266,7 @@ Commit the updated lockfiles together with the change. If you forget, the build 
 ## Contributing
 
 1. Create a topic branch for your change.
-2. Run `./gradlew test` (and additional checks) before raising a PR.
+2. Run `./gradlew check` before raising a PR.
 3. If you modify Kustomize templates or overlay logic, rerun `./script/render-overlay.sh` and commit the generated manifests.
 4. Add or adjust tests for any new behaviour or edge cases.
 

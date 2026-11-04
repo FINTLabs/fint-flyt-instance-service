@@ -37,6 +37,11 @@ $ROLE_MAPPING
         value:
          name: "server.servlet.context-path"
          value: "$BASE_PATH"
+      - op: add
+        path: "/spec/env/-"
+        value:
+          name: "HISTORY_DATABASE_SCHEMA"
+          value: "$HISTORY_DATABASE_SCHEMA"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "$STARTUP_PATH"

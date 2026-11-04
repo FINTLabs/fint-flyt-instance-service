@@ -96,6 +96,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.4.0")
     testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:kafka")
     testImplementation("org.testcontainers:postgresql")
 }
 

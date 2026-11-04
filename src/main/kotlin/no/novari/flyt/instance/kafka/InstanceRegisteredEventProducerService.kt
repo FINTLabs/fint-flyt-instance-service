@@ -18,8 +18,9 @@ import java.time.Duration
 class InstanceRegisteredEventProducerService(
     instanceFlowTemplateFactory: InstanceFlowTemplateFactory,
     eventTopicService: EventTopicService,
-    @Value("\${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}") retentionTime:
-        Duration,
+    @param:Value(
+        $$"${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}",
+    ) private val retentionTime: Duration,
 ) {
     private val instanceFlowTemplate: InstanceFlowTemplate<InstanceObjectDto> =
         instanceFlowTemplateFactory.createTemplate(InstanceObjectDto::class.java)
@@ -50,16 +51,14 @@ class InstanceRegisteredEventProducerService(
     fun publish(
         instanceFlowHeaders: InstanceFlowHeaders,
         instance: InstanceObjectDto,
-    ) {
-        instanceFlowTemplate.send(
-            InstanceFlowProducerRecord
-                .builder<InstanceObjectDto>()
-                .instanceFlowHeaders(instanceFlowHeaders)
-                .topicNameParameters(topicNameParameters)
-                .value(instance)
-                .build(),
-        )
-    }
+    ) = instanceFlowTemplate.send(
+        InstanceFlowProducerRecord
+            .builder<InstanceObjectDto>()
+            .instanceFlowHeaders(instanceFlowHeaders)
+            .topicNameParameters(topicNameParameters)
+            .value(instance)
+            .build(),
+    )
 
     private companion object {
         private const val PARTITIONS = 1

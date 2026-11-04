@@ -7,6 +7,8 @@ import no.novari.flyt.instance.model.entities.InstanceObjectCollection
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -89,5 +91,60 @@ class InstanceObjectAuditIntegrationTest {
 
         assertEquals(listOf(instance.id), result.map { it.id })
         assertNotNull(recent.id)
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = [-1, 0, 1])
+    fun `only old root instances are returned when descendants are old`(rootOffset: Long) {
+        val grandchild = InstanceObject(valuePerKey = mutableMapOf("level" to "grandchild"))
+        val child =
+            InstanceObject(
+                valuePerKey = mutableMapOf("level" to "child"),
+                objectCollectionPerKey =
+                    mutableMapOf("children" to InstanceObjectCollection(objects = mutableListOf(grandchild))),
+            )
+        val root =
+            instanceRepository.saveAndFlush(
+                InstanceObject(
+                    valuePerKey = mutableMapOf("level" to "root"),
+                    objectCollectionPerKey =
+                        mutableMapOf("children" to InstanceObjectCollection(objects = mutableListOf(child))),
+                ),
+            )
+        val threshold = Instant.parse("2026-01-01T12:00:00Z")
+        entityManager
+            .createNativeQuery(
+                "UPDATE instance_object SET created_at = :createdAt WHERE id IN (:rootId, :childId, :grandchildId)",
+            ).setParameter("createdAt", threshold.minusSeconds(1))
+            .setParameter("rootId", root.id)
+            .setParameter("childId", child.id)
+            .setParameter("grandchildId", grandchild.id)
+            .executeUpdate()
+        entityManager
+            .createNativeQuery("UPDATE instance_object SET created_at = :createdAt WHERE id = :id")
+            .setParameter("createdAt", threshold.plusSeconds(rootOffset))
+            .setParameter("id", root.id)
+            .executeUpdate()
+        entityManager.clear()
+
+        val result = instanceRepository.findAllOlderThan(threshold)
+        val expectedIds = if (rootOffset < 0) listOf(root.id) else emptyList()
+        assertEquals(expectedIds, result.map { it.id })
+        if (result.isNotEmpty()) {
+            val loadedChild =
+                result
+                    .single()
+                    .objectCollectionPerKey
+                    .getValue("children")
+                    .objects
+                    .single()
+            val loadedGrandchild =
+                loadedChild.objectCollectionPerKey
+                    .getValue("children")
+                    .objects
+                    .single()
+            assertEquals(child.id, loadedChild.id)
+            assertEquals(grandchild.id, loadedGrandchild.id)
+        }
     }
 }

@@ -92,6 +92,7 @@ while IFS= read -r file; do
   export LIVENESS_PATH="${base_path}/actuator/health/liveness"
   export METRICS_PATH="${base_path}/actuator/prometheus"
   export FINT_KAFKA_TOPIC_ORGID="${namespace}"
+  export HISTORY_DATABASE_SCHEMA="${namespace//-/_}_fint_flyt_history_service_db"
 
   export ROLE_MAPPING="$(build_role_mapping "$namespace" "$(authorized_org_id "$namespace")")"
   if [[ -z "$ROLE_MAPPING" ]]; then

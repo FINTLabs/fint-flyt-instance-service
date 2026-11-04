@@ -41,6 +41,11 @@ patches:
         value:
          name: "server.servlet.context-path"
          value: "/beta/trondelagfylke-no"
+      - op: add
+        path: "/spec/env/-"
+        value:
+          name: "HISTORY_DATABASE_SCHEMA"
+          value: "trondelagfylke_no_fint_flyt_history_service_db"
       - op: replace
         path: "/spec/probes/startup/path"
         value: "/beta/trondelagfylke-no/actuator/health"

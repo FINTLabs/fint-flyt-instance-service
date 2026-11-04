@@ -1,21 +1,20 @@
 package no.novari.flyt.instance.kafka
 
-import no.novari.flyt.instance.InstanceService
+import no.novari.flyt.instance.InstanceReceivedOffsetRepository
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.kafka.instanceflow.consuming.InstanceFlowListenerFactoryService
-import no.novari.kafka.consuming.ErrorHandlerConfiguration
-import no.novari.kafka.consuming.ErrorHandlerFactory
 import no.novari.kafka.consuming.ListenerConfiguration
 import no.novari.kafka.topic.EventTopicService
 import no.novari.kafka.topic.configuration.EventCleanupFrequency
 import no.novari.kafka.topic.configuration.EventTopicConfiguration
 import no.novari.kafka.topic.name.EventTopicNameParameters
 import no.novari.kafka.topic.name.TopicNamePrefixParameters
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer
-import org.springframework.util.backoff.FixedBackOff
+import org.springframework.kafka.listener.ContainerProperties
 import java.time.Duration
 
 @Configuration
@@ -51,54 +50,34 @@ class InstanceReceivedEventConsumerConfiguration(
     @Bean
     fun instanceReceivedEventConsumer(
         instanceFlowListenerFactoryService: InstanceFlowListenerFactoryService,
-        instanceService: InstanceService,
-        instanceRegisteredEventProducerService: InstanceRegisteredEventProducerService,
-        instanceRegistrationErrorProducerService: InstanceRegistrationErrorProducerService,
-        errorHandlerFactory: ErrorHandlerFactory,
+        instanceReceivedHandler: InstanceReceivedHandler,
+        offsetRepository: InstanceReceivedOffsetRepository,
     ): ConcurrentMessageListenerContainer<String, InstanceObjectDto> {
-        return instanceFlowListenerFactoryService
-            .createRecordListenerContainerFactory<InstanceObjectDto>(
-                InstanceObjectDto::class.java,
-                { instanceFlowConsumerRecord ->
-                    try {
-                        val persistedInstance = instanceService.save(instanceFlowConsumerRecord.consumerRecord.value())
-                        val persistedInstanceId = persistedInstance.id
-                        if (persistedInstanceId == null) {
-                            instanceRegistrationErrorProducerService.publishGeneralSystemErrorEvent(
-                                instanceFlowConsumerRecord.instanceFlowHeaders,
-                            )
-                        } else {
-                            instanceRegisteredEventProducerService.publish(
-                                instanceFlowConsumerRecord.instanceFlowHeaders
-                                    .toBuilder()
-                                    .instanceId(persistedInstanceId)
-                                    .build(),
-                                persistedInstance,
-                            )
-                        }
-                    } catch (_: Exception) {
-                        instanceRegistrationErrorProducerService.publishGeneralSystemErrorEvent(
-                            instanceFlowConsumerRecord.instanceFlowHeaders,
-                        )
-                    }
-                },
-                ListenerConfiguration
-                    .stepBuilder()
-                    .groupIdApplicationDefault()
-                    .maxPollRecordsKafkaDefault()
-                    .maxPollIntervalKafkaDefault()
-                    .continueFromPreviousOffsetOnAssignment()
-                    .build(),
-                errorHandlerFactory.createErrorHandler(
-                    ErrorHandlerConfiguration
-                        .stepBuilder<InstanceObjectDto>()
-                        .retryWithFixedInterval(Duration.ofMillis(FixedBackOff.DEFAULT_INTERVAL), 0)
-                        .useDefaultRetryClassification()
-                        .restartRetryOnExceptionChange()
-                        .skipFailedRecords()
+        val errorHandler = InstanceReceivedErrorHandler()
+        val container =
+            instanceFlowListenerFactoryService
+                .createRecordListenerContainerFactory<InstanceObjectDto>(
+                    InstanceObjectDto::class.java,
+                    instanceReceivedHandler::handle,
+                    ListenerConfiguration
+                        .stepBuilder()
+                        .groupIdApplicationDefault()
+                        .maxPollRecords(1)
+                        .maxPollIntervalKafkaDefault()
+                        .continueFromPreviousOffsetOnAssignment()
                         .build(),
-                ),
-            ).createContainer(eventTopicNameParameters)
+                    errorHandler,
+                ).createContainer(eventTopicNameParameters)
+        container.containerProperties.apply {
+            ackMode = ContainerProperties.AckMode.RECORD
+            assignmentCommitOption = ContainerProperties.AssignmentCommitOption.NEVER
+            isStopImmediate = true
+            isMissingTopicsFatal = true
+            kafkaConsumerProperties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
+            kafkaConsumerProperties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "none")
+            consumerRebalanceListener = InstanceReceivedOffsetInitializer(offsetRepository, errorHandler, container)
+        }
+        return container
     }
 
     private companion object {
