@@ -3,6 +3,7 @@ package no.novari.flyt.instance.kafka
 import no.novari.flyt.instance.InstanceReceivedOffsetRepository
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.kafka.instanceflow.consuming.InstanceFlowListenerFactoryService
+import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeadersMapper
 import no.novari.kafka.consuming.ListenerConfiguration
 import no.novari.kafka.topic.EventTopicService
 import no.novari.kafka.topic.configuration.EventCleanupFrequency
@@ -52,8 +53,9 @@ class InstanceReceivedEventConsumerConfiguration(
         instanceFlowListenerFactoryService: InstanceFlowListenerFactoryService,
         instanceReceivedHandler: InstanceReceivedHandler,
         offsetRepository: InstanceReceivedOffsetRepository,
+        headersMapper: InstanceFlowHeadersMapper,
     ): ConcurrentMessageListenerContainer<String, InstanceObjectDto> {
-        val errorHandler = InstanceReceivedErrorHandler()
+        val errorHandler = InstanceReceivedErrorHandler(instanceReceivedHandler, headersMapper)
         val container =
             instanceFlowListenerFactoryService
                 .createRecordListenerContainerFactory<InstanceObjectDto>(
@@ -75,7 +77,7 @@ class InstanceReceivedEventConsumerConfiguration(
             isMissingTopicsFatal = true
             kafkaConsumerProperties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
             kafkaConsumerProperties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "none")
-            consumerRebalanceListener = InstanceReceivedOffsetInitializer(offsetRepository, errorHandler, container)
+            consumerRebalanceListener = InstanceReceivedOffsetInitializer(offsetRepository)
         }
         return container
     }

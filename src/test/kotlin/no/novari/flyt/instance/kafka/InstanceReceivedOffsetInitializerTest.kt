@@ -5,24 +5,22 @@ import no.novari.flyt.instance.InstanceReceivedOffsetRepository
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
+import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.dao.DataAccessResourceFailureException
-import org.springframework.kafka.listener.MessageListenerContainer
 
 class InstanceReceivedOffsetInitializerTest {
     private val repository = mock<InstanceReceivedOffsetRepository>()
-    private val errors = mock<InstanceReceivedErrorHandler>()
-    private val container = mock<MessageListenerContainer>()
     private val consumer = mock<Consumer<String, Any>>()
-    private val initializer = InstanceReceivedOffsetInitializer(repository, errors, container)
+    private val initializer = InstanceReceivedOffsetInitializer(repository)
     private val partition = TopicPartition("afk-no.flyt.instance-received", 0)
 
     @BeforeEach
@@ -38,7 +36,6 @@ class InstanceReceivedOffsetInitializerTest {
 
         verify(repository).initialize(partition, 42)
         verify(consumer, never()).seek(any<TopicPartition>(), any<Long>())
-        verifyNoInteractions(errors)
     }
 
     @Test
@@ -48,18 +45,16 @@ class InstanceReceivedOffsetInitializerTest {
         initializer.onPartitionsAssigned(consumer, listOf(partition))
 
         verify(repository, never()).initialize(any(), any())
-        verifyNoInteractions(consumer, errors)
+        verifyNoInteractions(consumer)
     }
 
     @Test
     fun `missing committed offset stops without choosing earliest or latest`() {
         whenever(consumer.committed(setOf(partition))).thenReturn(emptyMap())
 
-        initializer.onPartitionsAssigned(consumer, listOf(partition))
-
-        verify(
-            errors,
-        ).handleOtherException(any<InstanceReceivedOffsetException>(), eq(consumer), eq(container), eq(false))
+        assertThrows(InstanceReceivedOffsetException::class.java) {
+            initializer.onPartitionsAssigned(consumer, listOf(partition))
+        }
         verify(repository, never()).initialize(any(), any())
     }
 
@@ -69,9 +64,12 @@ class InstanceReceivedOffsetInitializerTest {
         val failure = DataAccessResourceFailureException("database unavailable")
         whenever(repository.initialize(partition, 42)).thenThrow(failure)
 
-        initializer.onPartitionsAssigned(consumer, listOf(partition))
-
-        verify(errors).handleOtherException(failure, consumer, container, false)
+        assertSame(
+            failure,
+            assertThrows(DataAccessResourceFailureException::class.java) {
+                initializer.onPartitionsAssigned(consumer, listOf(partition))
+            },
+        )
     }
 
     @Test
@@ -79,9 +77,12 @@ class InstanceReceivedOffsetInitializerTest {
         val failure = InstanceReceivedOffsetException("taken over")
         whenever(repository.findNextOffset(partition)).thenThrow(failure)
 
-        initializer.onPartitionsAssigned(consumer, listOf(partition))
-
-        verify(errors).handleOtherException(failure, consumer, container, false)
+        assertSame(
+            failure,
+            assertThrows(InstanceReceivedOffsetException::class.java) {
+                initializer.onPartitionsAssigned(consumer, listOf(partition))
+            },
+        )
         verifyNoInteractions(consumer)
     }
 
@@ -89,6 +90,6 @@ class InstanceReceivedOffsetInitializerTest {
     fun `empty assignment performs no work`() {
         initializer.onPartitionsAssigned(consumer, emptyList())
 
-        verifyNoInteractions(repository, errors, consumer)
+        verifyNoInteractions(repository, consumer)
     }
 }

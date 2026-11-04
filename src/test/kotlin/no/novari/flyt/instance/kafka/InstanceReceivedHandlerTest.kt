@@ -6,8 +6,10 @@ import no.novari.flyt.instance.InstanceService
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.kafka.instanceflow.consuming.InstanceFlowConsumerRecord
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
+import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeadersMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.header.internals.RecordHeaders
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -34,7 +36,8 @@ class InstanceReceivedHandlerTest {
     private val registeredProducer = mock<InstanceRegisteredEventProducerService>()
     private val errorProducer = mock<InstanceRegistrationErrorProducerService>()
     private val repository = mock<InstanceReceivedOffsetRepository>()
-    private val handler = InstanceReceivedHandler(service, registeredProducer, errorProducer, repository)
+    private val headersMapper = mock<InstanceFlowHeadersMapper>()
+    private val handler = InstanceReceivedHandler(service, registeredProducer, errorProducer, repository, headersMapper)
     private val partition = TopicPartition("afk-no.flyt.instance-received", 0)
     private val headers =
         InstanceFlowHeaders
@@ -188,22 +191,21 @@ class InstanceReceivedHandlerTest {
     }
 
     @Test
-    fun `null payload stops without creating registration error or progress`() {
-        assertThrows(IllegalArgumentException::class.java) {
-            handler.handle(
-                InstanceFlowConsumerRecord(
-                    headers,
-                    ConsumerRecord<String, InstanceObjectDto>(partition.topic(), 0, 42, null, null),
-                ),
-            )
-        }
+    fun `null payload publishes registration error and advances without saving an instance`() {
+        handler.handle(
+            InstanceFlowConsumerRecord(
+                headers,
+                ConsumerRecord<String, InstanceObjectDto>(partition.topic(), 0, 42, null, null),
+            ),
+        )
 
-        verifyNoInteractions(service, registeredProducer, errorProducer)
-        verify(repository, never()).advance(any(), any())
+        verifyNoInteractions(service, registeredProducer)
+        verify(errorProducer).publishGeneralSystemErrorEvent(headers)
+        verify(repository).advance(partition, 43)
     }
 
     @Test
-    fun `interrupted broker wait restores the interrupt flag and does not advance`() {
+    fun `interrupted broker wait propagates without setting the interrupt flag or advancing`() {
         val interrupted =
             object : CompletableFuture<SendResult<String, InstanceObjectDto>>() {
                 override fun get(): SendResult<String, InstanceObjectDto> = throw InterruptedException("stopping")
@@ -211,12 +213,49 @@ class InstanceReceivedHandlerTest {
         whenever(registeredProducer.publish(any(), eq(saved))).thenReturn(interrupted)
         try {
             assertThrows(InterruptedException::class.java) { handler.handle(record()) }
-            assertTrue(Thread.currentThread().isInterrupted)
+            assertFalse(Thread.currentThread().isInterrupted)
             verify(repository, never()).advance(any(), any())
             verifyNoInteractions(errorProducer)
         } finally {
             Thread.interrupted()
         }
+    }
+
+    @Test
+    fun `unreadable payload with readable headers publishes error before advancing`() {
+        val rawHeaders = RecordHeaders()
+        whenever(headersMapper.getInstanceFlowHeaders(rawHeaders)).thenReturn(headers)
+
+        handler.reject(partition, 42, rawHeaders)
+
+        inOrder(errorProducer, repository) {
+            verify(errorProducer).publishGeneralSystemErrorEvent(headers)
+            verify(repository).advance(partition, 43)
+        }
+        verifyNoInteractions(service, registeredProducer)
+    }
+
+    @Test
+    fun `unreadable headers advance without fabricating error headers`() {
+        val rawHeaders = RecordHeaders()
+        whenever(headersMapper.getInstanceFlowHeaders(rawHeaders)).thenThrow(IllegalArgumentException("invalid header"))
+
+        handler.reject(partition, 42, rawHeaders)
+
+        verify(repository).advance(partition, 43)
+        verifyNoInteractions(service, registeredProducer, errorProducer)
+    }
+
+    @Test
+    fun `failed rejection publication leaves the position unchanged`() {
+        val rawHeaders = RecordHeaders()
+        whenever(headersMapper.getInstanceFlowHeaders(rawHeaders)).thenReturn(headers)
+        whenever(errorProducer.publishGeneralSystemErrorEvent(headers))
+            .thenReturn(CompletableFuture.failedFuture(IllegalStateException("broker unavailable")))
+
+        assertThrows(ExecutionException::class.java) { handler.reject(partition, 42, rawHeaders) }
+
+        verify(repository, never()).advance(any(), any())
     }
 
     private fun record(): InstanceFlowConsumerRecord<InstanceObjectDto> =

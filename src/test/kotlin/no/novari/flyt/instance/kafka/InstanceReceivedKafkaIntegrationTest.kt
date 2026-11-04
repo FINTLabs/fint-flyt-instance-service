@@ -25,6 +25,7 @@ import no.novari.kafka.topic.name.TopicNameService
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.admin.OffsetSpec
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -33,6 +34,8 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.header.Header
+import org.apache.kafka.common.header.internals.RecordHeader
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.awaitility.Awaitility.await
@@ -42,6 +45,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -221,18 +226,53 @@ class InstanceReceivedKafkaIntegrationTest {
     }
 
     @Test
-    fun `unreadable payload stops without advancing or processing later records`() {
+    fun `unreadable payload is rejected and the next record is processed`() {
         withConsumer { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 0)
 
             send("not-json-private-source-value")
             send("{}")
-            awaitStopped(context)
+            awaitPosition(repository, 2)
 
-            assertEquals(0L, repository.findNextOffset(partition))
-            assertEquals(0L, committedOffset())
-            verifyNoInteractions(service)
+            await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
+            assertEquals(1L, publishedErrors())
+            verify(service, times(1)).save(any())
+        }
+    }
+
+    @Test
+    fun `null payload is rejected and the next record is processed`() {
+        withConsumer { context ->
+            val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
+            awaitPosition(repository, 0)
+
+            send(null)
+            send("{}")
+            awaitPosition(repository, 2)
+
+            await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
+            assertEquals(1L, publishedErrors())
+            verify(service, times(1)).save(any())
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["missing", "not-json", "null"])
+    fun `unreadable headers are skipped and the next record is processed`(invalid: String) {
+        withConsumer { context ->
+            val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
+            awaitPosition(repository, 0)
+            val invalidHeader =
+                if (invalid == "missing") null else RecordHeader("flyt.instance-flow-headers", invalid.toByteArray())
+
+            send("{}", invalidHeader)
+            send("{}")
+            awaitPosition(repository, 2)
+
+            await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
+            assertEquals(0L, publishedErrors())
+            verify(service, times(1)).save(any())
         }
     }
 
@@ -349,7 +389,10 @@ class InstanceReceivedKafkaIntegrationTest {
         }
     }
 
-    private fun send(payload: String) {
+    private fun send(
+        payload: String?,
+        flowHeader: Header? = headersMapper.toHeader(headers),
+    ) {
         KafkaProducer(
             mapOf(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.bootstrapServers),
             StringSerializer(),
@@ -357,7 +400,7 @@ class InstanceReceivedKafkaIntegrationTest {
         ).use { producer ->
             producer
                 .send(
-                    ProducerRecord(sourceTopic, 0, null, null, payload, listOf(headersMapper.toHeader(headers))),
+                    ProducerRecord<String, String>(sourceTopic, 0, null, null, payload, listOfNotNull(flowHeader)),
                 ).get(15, TimeUnit.SECONDS)
         }
     }
@@ -384,6 +427,17 @@ class InstanceReceivedKafkaIntegrationTest {
                 ).partitionsToOffsetAndMetadata()
                 .get(10, TimeUnit.SECONDS)[partition]
                 ?.offset()
+        }
+
+    private fun publishedErrors(): Long =
+        admin().use {
+            val output = TopicPartition(errorTopic, 0)
+            it
+                .listOffsets(
+                    mapOf(output to OffsetSpec.latest()),
+                ).partitionResult(output)
+                .get(10, TimeUnit.SECONDS)
+                .offset()
         }
 
     private fun admin(): Admin =

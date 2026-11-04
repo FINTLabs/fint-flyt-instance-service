@@ -62,48 +62,33 @@ Swagger UI is then available at `http://localhost:8080/beta/fintlabs-no/swagger-
 
 ### Instance-received progress and handover
 
-Instance-service writes one position per `instance-received` topic and partition to
-`<history-schema>.instance_received_offset`. The table belongs to history-service and must already
-exist in the same PostgreSQL database. Its V9 and V10 migrations remain owned by history-service;
-instance-service neither creates the table nor changes its own Flyway schema.
+Instance-service writes `next_offset` per topic/partition to the existing
+`<history-schema>.instance_received_offset` table in the shared PostgreSQL database. History-service
+owns the V9/V10 migrations. `HISTORY_DATABASE_SCHEMA` explicitly selects the history schema in every
+overlay; instance entity mappings and Flyway remain in the instance schema.
 
-Configure `novari.flyt.instance-service.database.history-schema` through `HISTORY_DATABASE_SCHEMA`.
-Every deployment overlay supplies an explicit organization-specific value, including beta. For AFK
-the value is `afk_no_fint_flyt_history_service_db`. The schema is validated and quoted explicitly;
-the datasource and instance entity mappings are unchanged.
+Missing rows are initialized from the existing consumer group's committed position, including idle
+partitions. Existing progress is preserved. A missing group position is an error; there is no automatic
+earliest/latest fallback. Initialization reflects the legacy group's previous processing policy.
 
-The received-event consumer keeps its existing application-default group. On partition assignment,
-a missing row is initialized from that group's committed Kafka offset, without adding one. This
-also initializes idle partitions. Existing rows are preserved. If both the row and committed Kafka
-position are absent, consumption stops; there is no automatic earliest/latest fallback, seek, or
-Kafka group-offset reset. The initial committed position reflects the legacy consumer's previous
-behavior, including its former skip-failed-records policy; it does not repair past processing failures.
+After saving, registration waits for the library producer's broker confirmation before checkpointing.
+Saving, sending, and checkpointing have separate transactions; a crash between them may cause duplicates.
+Completed records are skipped on redelivery. One record is polled at a time, with auto-commit disabled;
+`max.poll.interval.ms` must accommodate producer delivery and database work.
 
-After saving an instance, the consumer waits for the existing library producer's `instance-registered`
-publication to be confirmed by the broker. If saving fails or produces no ID, it waits for confirmation
-of the existing registration error instead. Only then does a short database transaction store the
-record's offset plus one and update `updated_at`. Kafka sending and waiting take place outside database
-transactions. The producer futures use the library's delivery settings; there is no additional short
-acknowledgement timeout. This waiting is specific to registration, not the manual retry API.
+Null or unreadable payloads produce the existing registration error when flow headers can be read.
+Unreadable headers are logged using record coordinates, without fabricating history. Invalid messages
+are skipped automatically: the database position is advanced before Kafka seeks and commits the next
+position. Manual edits of either database or Kafka offsets are not needed for malformed input.
 
-The consumer polls one record at a time and commits Kafka offsets after each successfully handled
-record, with auto-commit disabled. Ensure `max.poll.interval.ms` accommodates the producer's
-`max.block.ms`, `delivery.timeout.ms`, and database work. Already completed records below the stored
-position are skipped, and database progress never moves backwards. Kafka offsets may contain gaps.
-Publication failures, checkpoint failures, unreadable input, or assignment failures stop this consumer
-instead of skipping the record. Later records cannot advance the position past that failure. Other
-consumers and REST endpoints retain their existing behavior. Error logs contain record coordinates
-and sanitized technical causes, without the payload.
+Publication, checkpoint, and assignment failures still stop this consumer without passing unresolved
+work. Restore the connection or required privileges and restart processing; moving offsets is not a
+repair for infrastructure failures. Logs preserve technical coordinates, Kafka timeout details and
+SQLSTATE while redacting exception text that may contain payloads.
 
-Instance-service leaves `cluster_id` and `topic_id` NULL. A row with either identity assigned is
-considered taken over by history-service: instance-service refuses further processing and writes.
-Stop and drain instance-service before history-service assigns these identities. This check does not
-replace the requirement for a single processing owner during the transition.
-
-This is a progress checkpoint, not a distributed transaction or outbox. A crash between saving,
-publishing, and checkpointing can still cause redelivery and duplicate instances or events. Restart
-does not automatically retry a saved-but-unpublished instance using its original ID. Before handover,
-resolve any stopped processing and verify that no publication or database update is outstanding.
+`cluster_id` and `topic_id` stay NULL until handover. Instance-service refuses processing once
+history-service has assigned identity. Stop and drain the old writer before binding and starting the
+new owner. This application does not configure external alerts or change REST health probes.
 
 #### Database permissions
 
