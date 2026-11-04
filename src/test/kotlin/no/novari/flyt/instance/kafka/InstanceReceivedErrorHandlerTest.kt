@@ -1,5 +1,9 @@
 package no.novari.flyt.instance.kafka
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import no.novari.flyt.instance.InstanceReceivedOffsetException
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeadersMapper
@@ -10,7 +14,10 @@ import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.RecordDeserializationException
 import org.apache.kafka.common.errors.TimeoutException
 import org.apache.kafka.common.record.TimestampType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
@@ -24,10 +31,14 @@ import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.slf4j.LoggerFactory
 import org.springframework.dao.DataAccessResourceFailureException
 import org.springframework.kafka.KafkaException
 import org.springframework.kafka.listener.MessageListenerContainer
+import java.time.Clock
+import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 class InstanceReceivedErrorHandlerTest {
     private val handler = mock<InstanceReceivedHandler>()
@@ -170,6 +181,58 @@ class InstanceReceivedErrorHandlerTest {
 
         verify(consumer, never()).enforceRebalance()
         verify(container, never()).stopAbnormally(any())
+    }
+
+    @Test
+    fun `repeated failures log once per minute and recovery resets the first failure log`() {
+        val now = AtomicReference(Instant.parse("2026-11-04T10:00:00Z"))
+        val clock = mock<Clock>()
+        whenever(clock.instant()).thenAnswer { now.get() }
+        val errors = InstanceReceivedErrorHandler(handler, headersMapper, clock)
+        val logger = LoggerFactory.getLogger(InstanceReceivedErrorHandler::class.java) as Logger
+        val captured = ListAppender<ILoggingEvent>().apply { start() }
+        logger.addAppender(captured)
+        try {
+            errors.handleOtherException(TimeoutException("Broker unavailable"), consumer, container, false)
+            repeat(11) {
+                now.set(now.get().plusSeconds(5))
+                errors.handleOtherException(
+                    IllegalStateException("poll failed", TimeoutException("Broker unavailable")),
+                    consumer,
+                    container,
+                    false,
+                )
+            }
+            assertEquals(1, captured.list.size)
+
+            now.set(now.get().plusSeconds(5))
+            errors.handleOtherException(TimeoutException("Broker unavailable"), consumer, container, false)
+            errors.handleOtherException(
+                DataAccessResourceFailureException("Database unavailable"),
+                consumer,
+                container,
+                false,
+            )
+            errors.processingSucceeded()
+            errors.processingSucceeded()
+            errors.handleOtherException(
+                DataAccessResourceFailureException("Database unavailable"),
+                consumer,
+                container,
+                false,
+            )
+
+            assertEquals(
+                listOf(Level.ERROR, Level.WARN, Level.ERROR, Level.INFO, Level.ERROR),
+                captured.list.map { it.level },
+            )
+            assertNotNull(captured.list[0].throwableProxy)
+            assertNull(captured.list[1].throwableProxy)
+            assertEquals("Instance-received processing resumed after retry", captured.list[3].formattedMessage)
+        } finally {
+            logger.detachAppender(captured)
+            captured.stop()
+        }
     }
 
     private fun unreadableRecord(): RecordDeserializationException =

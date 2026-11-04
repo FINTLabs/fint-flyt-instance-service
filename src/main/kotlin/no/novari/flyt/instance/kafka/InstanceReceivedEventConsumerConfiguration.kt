@@ -60,7 +60,10 @@ class InstanceReceivedEventConsumerConfiguration(
             instanceFlowListenerFactoryService
                 .createRecordListenerContainerFactory<InstanceObjectDto>(
                     InstanceObjectDto::class.java,
-                    instanceReceivedHandler::handle,
+                    { record ->
+                        instanceReceivedHandler.handle(record)
+                        errorHandler.processingSucceeded()
+                    },
                     ListenerConfiguration
                         .stepBuilder()
                         .groupIdApplicationDefault()

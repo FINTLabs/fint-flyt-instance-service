@@ -16,13 +16,17 @@ import org.springframework.kafka.listener.DefaultErrorHandler
 import org.springframework.kafka.listener.ListenerUtils
 import org.springframework.kafka.listener.MessageListenerContainer
 import org.springframework.util.backoff.FixedBackOff
+import java.time.Clock
+import java.time.Instant
 
 class InstanceReceivedErrorHandler(
     private val handler: InstanceReceivedHandler,
     private val headersMapper: InstanceFlowHeadersMapper,
+    private val clock: Clock = Clock.systemUTC(),
 ) : DefaultErrorHandler(FixedBackOff(5_000, FixedBackOff.UNLIMITED_ATTEMPTS)) {
     private val consumerLogger = KotlinLogging.logger {}
     private val stopping = CommonContainerStoppingErrorHandler()
+    private val retryLog = ThreadLocal<RetryLogState>()
 
     init {
         isAckAfterHandle = false
@@ -49,7 +53,7 @@ class InstanceReceivedErrorHandler(
                 container,
             )
         }
-        consumerLogger.error(thrownException) {
+        logRetry(thrownException) {
             "Retrying instance-received processing: topic=${record.topic()}, " +
                 "partition=${record.partition()}, offset=${record.offset()}"
         }
@@ -76,7 +80,7 @@ class InstanceReceivedErrorHandler(
             )
             return
         }
-        consumerLogger.error(thrownException) { "Retrying instance-received assignment or polling after failure" }
+        logRetry(thrownException) { "Retrying instance-received assignment or polling after failure" }
         if (container.isRunning &&
             generateSequence(thrownException as Throwable) { it.cause }.any {
                 it is InstanceReceivedAssignmentException
@@ -112,14 +116,37 @@ class InstanceReceivedErrorHandler(
                 stop(failure, consumer, container)
                 return false
             }
-            consumerLogger.error(
-                failure,
-            ) { "Retrying rejection of instance-received message for $partition, offset=$offset" }
+            logRetry(failure) { "Retrying rejection of instance-received message for $partition, offset=$offset" }
             ListenerUtils.stoppableSleep(container, 5_000)
             return false
         }
+        processingSucceeded()
         consumerLogger.warn { "Skipped invalid instance-received message for $partition, offset=$offset" }
         return true
+    }
+
+    internal fun processingSucceeded() {
+        if (retryLog.get() != null) {
+            consumerLogger.info { "Instance-received processing resumed after retry" }
+            retryLog.remove()
+        }
+    }
+
+    private fun logRetry(
+        failure: Exception,
+        message: () -> String,
+    ) {
+        val now = Instant.now(clock)
+        val failureType = generateSequence(failure as Throwable) { it.cause }.last().javaClass.name
+        val previous = retryLog.get()
+        if (previous == null || previous.failureType != failureType) {
+            consumerLogger.error(failure, message)
+        } else if (!now.isBefore(previous.nextLogAt)) {
+            consumerLogger.warn { "${message()} ($failureType)" }
+        } else {
+            return
+        }
+        retryLog.set(RetryLogState(failureType, now.plusSeconds(60)))
     }
 
     private fun fatalPositionFailure(failure: Throwable): Boolean =
@@ -133,9 +160,15 @@ class InstanceReceivedErrorHandler(
         consumer: Consumer<*, *>,
         container: MessageListenerContainer,
     ) {
+        retryLog.remove()
         consumerLogger.error(failure) {
             "Stopping instance-received consumer because its starting position is invalid or taken over"
         }
         stopping.handleOtherException(failure, consumer, container, false)
     }
+
+    private data class RetryLogState(
+        val failureType: String,
+        val nextLogAt: Instant,
+    )
 }

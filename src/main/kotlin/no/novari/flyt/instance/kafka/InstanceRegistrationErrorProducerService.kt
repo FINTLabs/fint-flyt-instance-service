@@ -22,9 +22,9 @@ import java.time.Duration
 class InstanceRegistrationErrorProducerService(
     errorEventTopicService: ErrorEventTopicService,
     instanceFlowTemplateFactory: InstanceFlowTemplateFactory,
-    @param:Value(
+    @Value(
         $$"${novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time}",
-    ) private val retentionTime: Duration,
+    ) retentionTime: Duration,
 ) {
     private val instanceFlowTemplate: InstanceFlowTemplate<InstanceErrorEvent> =
         instanceFlowTemplateFactory.createTemplate(InstanceErrorEvent::class.java)

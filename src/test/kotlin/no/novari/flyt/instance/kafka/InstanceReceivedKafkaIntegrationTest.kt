@@ -13,6 +13,8 @@ import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory
 import no.novari.kafka.consuming.ConsumerFactoryService
 import no.novari.kafka.consuming.ListenerContainerFactoryService
 import no.novari.kafka.consuming.ParameterizedListenerContainerFactoryService
+import no.novari.kafka.health.KafkaConsumersHealthIndicator
+import no.novari.kafka.health.KafkaHealthAutoConfiguration
 import no.novari.kafka.producing.ParameterizedTemplateFactory
 import no.novari.kafka.producing.ProducerFactory
 import no.novari.kafka.producing.TemplateFactory
@@ -49,6 +51,7 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
@@ -57,9 +60,15 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration
+import org.springframework.boot.actuate.health.HealthEndpoint
+import org.springframework.boot.actuate.health.Status
+import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.convert.ApplicationConversionService
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
+import org.springframework.boot.test.system.CapturedOutput
+import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.JdbcTemplate
@@ -197,17 +206,41 @@ class InstanceReceivedKafkaIntegrationTest {
     }
 
     @Test
-    fun `failed registered publication produces errors and later records continue`() {
+    @ExtendWith(OutputCaptureExtension::class)
+    fun `registered publication recovers without saving again or producing an error`(output: CapturedOutput) {
         withConsumer(failPublication = true) { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 0)
 
             send("{}")
             send("{}")
+            await().pollDelay(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(10)).untilAsserted {
+                assertEquals(0L, repository.findNextOffset(partition))
+                verify(service, times(1)).save(any())
+                assertEquals(0L, publishedRecords(registeredTopic))
+                assertEquals(0L, publishedErrors())
+            }
+
+            admin().use {
+                it
+                    .incrementalAlterConfigs(
+                        mapOf(
+                            ConfigResource(ConfigResource.Type.TOPIC, registeredTopic) to
+                                listOf(
+                                    AlterConfigOp(
+                                        ConfigEntry("max.message.bytes", "1048576"),
+                                        AlterConfigOp.OpType.SET,
+                                    ),
+                                ),
+                        ),
+                    ).all()
+                    .get(10, TimeUnit.SECONDS)
+            }
             awaitPosition(repository, 2)
 
             await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
-            assertEquals(2L, publishedErrors())
+            assertEquals(0L, publishedErrors())
+            assertEquals(2L, publishedRecords(registeredTopic))
             assertTrue(
                 context
                     .getBean(
@@ -216,6 +249,7 @@ class InstanceReceivedKafkaIntegrationTest {
                     ).isRunning,
             )
             verify(service, times(2)).save(any())
+            assertTrue(output.all.contains("Instance-received processing resumed after retry"))
         }
     }
 
@@ -251,7 +285,8 @@ class InstanceReceivedKafkaIntegrationTest {
 
     @Test
     fun `failed error publication is retried automatically without saving again`() {
-        withConsumer(failPublication = true, failErrorPublication = true) { context ->
+        whenever(service.save(any())).thenThrow(IllegalArgumentException("invalid source data"))
+        withConsumer(failErrorPublication = true) { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 0)
             send("{}")
@@ -379,6 +414,35 @@ class InstanceReceivedKafkaIntegrationTest {
     }
 
     @Test
+    fun `position bound by history-service stops with DOWN health before saving`() {
+        withConsumer(initialPosition = 0) { context ->
+            val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
+            awaitPosition(repository, 0)
+            adminJdbc.update(
+                "UPDATE history_test.instance_received_offset SET cluster_id = ?, topic_id = ? WHERE topic_name = ?",
+                "history-cluster",
+                UUID.randomUUID(),
+                sourceTopic,
+            )
+
+            send("{}")
+            awaitStopped(context)
+
+            assertEquals(
+                0L,
+                checkNotNull(
+                    adminJdbc.queryForObject(
+                        "SELECT next_offset FROM history_test.instance_received_offset WHERE topic_name = ?",
+                        Long::class.java,
+                        sourceTopic,
+                    ),
+                ),
+            )
+            verifyNoInteractions(service)
+        }
+    }
+
+    @Test
     fun `redelivery preserves database progress and skips records already confirmed`() {
         withConsumer(initialPosition = 1) { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
@@ -451,7 +515,12 @@ class InstanceReceivedKafkaIntegrationTest {
         val producerFactory = TrackingProducerFactory(producerConfig)
         try {
             ApplicationContextRunner()
-                .withUserConfiguration(KafkaTestConfiguration::class.java)
+                .withConfiguration(
+                    AutoConfigurations.of(
+                        KafkaHealthAutoConfiguration::class.java,
+                        HealthEndpointAutoConfiguration::class.java,
+                    ),
+                ).withUserConfiguration(KafkaTestConfiguration::class.java)
                 .withInitializer { it.beanFactory.conversionService = ApplicationConversionService.getSharedInstance() }
                 .withPropertyValues(
                     "novari.flyt.instance-service.database.history-schema=history_test",
@@ -480,6 +549,7 @@ class InstanceReceivedKafkaIntegrationTest {
                 .withBean(ErrorEventTopicService::class.java, { mock<ErrorEventTopicService>() })
                 .run { context ->
                     assertNull(context.startupFailure)
+                    context.getBean(KafkaConsumersHealthIndicator::class.java).onApplicationReady(mock())
                     action(context)
                 }
         } finally {
@@ -515,6 +585,9 @@ class InstanceReceivedKafkaIntegrationTest {
     private fun awaitStopped(context: AssertableApplicationContext) {
         val container = context.getBean("instanceReceivedEventConsumer", ConcurrentMessageListenerContainer::class.java)
         await().atMost(Duration.ofSeconds(20)).until { !container.isRunning }
+        val health = context.getBean(HealthEndpoint::class.java)
+        assertEquals(Status.DOWN, health.healthForPath("kafkaConsumers")?.status)
+        assertEquals(Status.DOWN, health.health().status)
     }
 
     private fun committedOffset(): Long? =

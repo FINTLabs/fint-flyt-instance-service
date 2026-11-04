@@ -125,26 +125,35 @@ class InstanceReceivedHandlerTest {
     }
 
     @Test
-    fun `synchronous publication failure publishes an error for the saved instance and advances`() {
-        whenever(registeredProducer.publish(any(), eq(saved))).thenThrow(IllegalStateException("broker unavailable"))
+    fun `synchronous publication failure retries the registered event without saving again`() {
+        whenever(registeredProducer.publish(any(), eq(saved)))
+            .thenThrow(IllegalStateException("broker unavailable"))
+            .thenReturn(registered)
 
+        assertThrows(IllegalStateException::class.java) { handler.handle(record()) }
+        verify(repository, never()).advance(any(), any())
         handler.handle(record())
 
-        verify(errorProducer).publishGeneralSystemErrorEvent(headers.toBuilder().instanceId(saved.id).build())
+        verify(service, times(1)).save(input)
+        verify(registeredProducer, times(2)).publish(headers.toBuilder().instanceId(saved.id).build(), saved)
         verify(repository).advance(partition, 43)
+        verifyNoInteractions(errorProducer)
     }
 
     @Test
-    fun `failed broker confirmation publishes a registration error before advancing`() {
+    fun `failed broker confirmation retries the registered event before advancing`() {
         whenever(registeredProducer.publish(any(), eq(saved)))
             .thenReturn(CompletableFuture.failedFuture(IllegalStateException("broker unavailable")))
+            .thenReturn(registered)
 
+        assertThrows(ExecutionException::class.java) { handler.handle(record()) }
+        verify(repository, never()).advance(any(), any())
         handler.handle(record())
 
-        inOrder(errorProducer, repository) {
-            verify(errorProducer).publishGeneralSystemErrorEvent(headers.toBuilder().instanceId(saved.id).build())
-            verify(repository).advance(partition, 43)
-        }
+        verify(service, times(1)).save(input)
+        verify(registeredProducer, times(2)).publish(headers.toBuilder().instanceId(saved.id).build(), saved)
+        verify(repository).advance(partition, 43)
+        verifyNoInteractions(errorProducer)
     }
 
     @Test
@@ -175,9 +184,8 @@ class InstanceReceivedHandlerTest {
     }
 
     @Test
-    fun `retrying a failed error publication does not repeat saving or registered publication`() {
-        whenever(registeredProducer.publish(any(), eq(saved)))
-            .thenReturn(CompletableFuture.failedFuture(IllegalStateException("registration publication failed")))
+    fun `retrying a failed error publication does not repeat saving`() {
+        whenever(service.save(input)).thenThrow(IllegalArgumentException("invalid source data"))
         whenever(errorProducer.publishGeneralSystemErrorEvent(any()))
             .thenReturn(CompletableFuture.failedFuture(IllegalStateException("broker unavailable")), rejected)
 
@@ -186,8 +194,8 @@ class InstanceReceivedHandlerTest {
         handler.handle(record())
 
         verify(service, times(1)).save(input)
-        verify(registeredProducer, times(1)).publish(any(), eq(saved))
-        verify(errorProducer, times(2)).publishGeneralSystemErrorEvent(headers.toBuilder().instanceId(saved.id).build())
+        verifyNoInteractions(registeredProducer)
+        verify(errorProducer, times(2)).publishGeneralSystemErrorEvent(headers)
         verify(repository).advance(partition, 43)
     }
 

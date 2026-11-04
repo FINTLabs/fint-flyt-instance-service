@@ -97,24 +97,13 @@ class InstanceReceivedHandler(
         }
         val nextOffset = Math.incrementExact(offset)
         if (!registration.publicationConfirmed) {
-            if (!registration.failed) {
-                try {
-                    registeredProducer
-                        .publish(
-                            checkNotNull(registration.headers),
-                            checkNotNull(registration.instance),
-                        ).get()
-                } catch (failure: InterruptedException) {
-                    throw failure
-                } catch (failure: Exception) {
-                    registration.failed = true
-                    logger.error {
-                        "Instance-registered publication failed for $partition, offset=$offset: " +
-                            "${failure.cause?.javaClass?.name ?: failure.javaClass.name}"
-                    }
-                }
-            }
-            if (registration.failed && registration.headers != null) {
+            if (registration.instance?.id != null) {
+                registeredProducer
+                    .publish(
+                        checkNotNull(registration.headers),
+                        registration.instance,
+                    ).get()
+            } else if (registration.headers != null) {
                 errorProducer.publishGeneralSystemErrorEvent(registration.headers).get()
             }
             registration.publicationConfirmed = true
@@ -137,7 +126,6 @@ class InstanceReceivedHandler(
         val offset: Long,
         val headers: InstanceFlowHeaders?,
         val instance: InstanceObjectDto?,
-        var failed: Boolean = instance?.id == null,
         var publicationConfirmed: Boolean = false,
     )
 }

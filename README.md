@@ -72,9 +72,10 @@ partitions. Existing progress is preserved. A missing group position is an error
 earliest/latest fallback. Initialization reflects the legacy group's previous processing policy.
 
 After saving, registration waits for the library producer's broker confirmation before checkpointing.
-If saving or publishing `instance-registered` fails, the existing `instance-error` event is published
-instead. Publication failures include the saved instance ID in the error headers. Processing continues
-after the error is confirmed and the position is stored. Completed records are skipped on redelivery.
+If saving fails, the existing `instance-error` event is published instead. Failed publication of
+`instance-registered` is retried with the same saved instance and generated ID; it is not converted
+into a registration error. Processing continues after publication is confirmed and the position is
+stored. Completed records are skipped on redelivery.
 One record is polled at a time, with auto-commit disabled; `max.poll.interval.ms` must accommodate
 producer delivery and database work.
 
@@ -83,12 +84,15 @@ Unreadable headers are logged using record coordinates, without fabricating hist
 are skipped automatically: the database position is advanced before Kafka seeks and commits the next
 position. Manual edits of either database or Kafka offsets are not needed for malformed input.
 
-If publishing the error or storing the position fails, the consumer retries automatically with a
+If publishing either event or storing the position fails, the consumer retries automatically with a
 five-second backoff. It retains the saved result and confirmed publication in memory for the active
 assignment, so retries do not save the instance or repeat a confirmed publication. Polling and temporary
 assignment failures also retry; no manual restart is needed after connectivity or privileges recover.
-Position and Kafka commits remain unchanged until the pending work completes. Failures awaiting retry
-are logged with their original cause; invalid message content is not explicitly written to logs.
+Position and Kafka commits remain unchanged until the pending work completes. The retry handler logs
+the original cause on the first failure and when the underlying exception type changes.
+Repeated failures of the same type on a consumer thread produce at most one warning per
+minute, without a stack trace. Successful processing after retry is logged once. Invalid message
+content is not explicitly written to logs.
 
 Saving, sending, and checkpointing have separate transactions. The temporary state is discarded on
 partition revocation or loss. Crashes, rebalances and ambiguous publication outcomes can still cause
@@ -97,6 +101,9 @@ duplicates; this is not a durable outbox or an exactly-once guarantee.
 `cluster_id` and `topic_id` stay NULL until handover. Instance-service refuses processing once
 history-service has assigned identity. Missing or out-of-range starting positions also stop processing
 rather than guessing an offset. Stop and drain the old writer before binding and starting the new owner.
+Fatal stops are exposed as `DOWN` by the Kafka library's existing `kafkaConsumers` health component
+and aggregate `/actuator/health`. This is a health signal, not an external alert or a guarantee that
+liveness triggers a restart. Probe configuration is unchanged.
 
 #### Database permissions
 
@@ -232,7 +239,8 @@ The script injects namespace-specific values (base paths, Kafka topics, role map
 
 ## Observability & Operations
 
-- Readiness and liveness: `/actuator/health`.
+- Aggregate health: `/actuator/health`, including Kafka consumer status (`kafkaConsumers`).
+- Readiness and liveness probes: `/actuator/health/readiness` and `/actuator/health/liveness`.
 - Metrics: `/actuator/prometheus`.
 - Structured logging via shared FINT logging profile; Kafka and cleanup events emit detailed log messages for traceability.
 
