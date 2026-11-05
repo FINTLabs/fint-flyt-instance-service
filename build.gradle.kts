@@ -84,9 +84,9 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
-    implementation("no.novari:flyt-audit-starter:1.2.0")
-    implementation("no.novari:flyt-kafka:7.4.0")
-    implementation("no.novari:flyt-web-resource-server:4.1.0")
+    implementation("no.novari:flyt-audit-starter:1.2.1")
+    implementation("no.novari:flyt-kafka:7.4.1")
+    implementation("no.novari:flyt-web-resource-server:4.1.1")
 
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     // Pinned to 8.x: 9.x pulls in Jackson 3 (tools.jackson), while Spring Boot 3.5 uses Jackson 2
