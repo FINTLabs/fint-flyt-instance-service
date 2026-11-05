@@ -19,9 +19,8 @@ import org.springframework.dao.DataAccessResourceFailureException
 
 class InstanceReceivedOffsetInitializerTest {
     private val repository = mock<InstanceReceivedOffsetRepository>()
-    private val handler = mock<InstanceReceivedHandler>()
     private val consumer = mock<Consumer<String, Any>>()
-    private val initializer = InstanceReceivedOffsetInitializer(repository, handler)
+    private val initializer = InstanceReceivedOffsetInitializer(repository)
     private val partition = TopicPartition("afk-no.flyt.instance-received", 0)
 
     @BeforeEach
@@ -60,7 +59,7 @@ class InstanceReceivedOffsetInitializerTest {
     }
 
     @Test
-    fun `database write failure stops the consumer`() {
+    fun `database write failure requests assignment retry`() {
         whenever(consumer.committed(setOf(partition))).thenReturn(mapOf(partition to OffsetAndMetadata(42)))
         val failure = DataAccessResourceFailureException("database unavailable")
         whenever(repository.initialize(partition, 42)).thenThrow(failure)
@@ -90,22 +89,6 @@ class InstanceReceivedOffsetInitializerTest {
     fun `empty assignment performs no work`() {
         initializer.onPartitionsAssigned(consumer, emptyList())
 
-        verifyNoInteractions(repository, consumer)
-    }
-
-    @Test
-    fun `revocation discards only pending work for the revoked partitions`() {
-        initializer.onPartitionsRevokedBeforeCommit(consumer, listOf(partition))
-
-        verify(handler).clearPending(listOf(partition))
-        verifyNoInteractions(repository, consumer)
-    }
-
-    @Test
-    fun `lost assignment discards pending work`() {
-        initializer.onPartitionsLost(consumer, listOf(partition))
-
-        verify(handler).clearPending(listOf(partition))
         verifyNoInteractions(repository, consumer)
     }
 }

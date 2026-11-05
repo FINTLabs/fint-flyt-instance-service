@@ -71,32 +71,33 @@ Missing rows are initialized from the existing consumer group's committed positi
 partitions. Existing progress is preserved. A missing group position is an error; there is no automatic
 earliest/latest fallback. Initialization reflects the legacy group's previous processing policy.
 
-After saving, registration waits for the library producer's broker confirmation before checkpointing.
-If saving fails, the existing `instance-error` event is published instead. Failed publication of
-`instance-registered` is retried with the same saved instance and generated ID; it is not converted
-into a registration error. Processing continues after publication is confirmed and the position is
-stored. Completed records are skipped on redelivery.
-One record is polled at a time, with auto-commit disabled; `max.poll.interval.ms` must accommodate
-producer delivery and database work.
+Registration saves the instance, calls the Kafka library's `send()` for `instance-registered`, then
+advances the database position. If saving fails, it sends the existing `instance-error` instead.
+Neither producer exposes or waits on the returned future. This follows the existing service's
+asynchronous publication contract: `send()` returning is sufficient to advance, not proof of broker
+receipt. Asynchronous failures are handled by the Kafka library's producer monitoring and logging.
+Completed records are skipped on redelivery. One record is polled at a time, with auto-commit disabled;
+`max.poll.interval.ms` must accommodate database work and any blocking inside `send()` (`max.block.ms`).
 
 Null or unreadable payloads produce the existing registration error when flow headers can be read.
 Unreadable headers are logged using record coordinates, without fabricating history. Invalid messages
 are skipped automatically: the database position is advanced before Kafka seeks and commits the next
 position. Manual edits of either database or Kafka offsets are not needed for malformed input.
 
-If publishing either event or storing the position fails, the consumer retries automatically with a
-five-second backoff. It retains the saved result and confirmed publication in memory for the active
-assignment, so retries do not save the instance or repeat a confirmed publication. Polling and temporary
+If `send()` throws synchronously or storing the position fails, the consumer retries automatically
+with a five-second backoff. These failures do not advance the database position. Polling and temporary
 assignment failures also retry; no manual restart is needed after connectivity or privileges recover.
-Position and Kafka commits remain unchanged until the pending work completes. The retry handler logs
-the original cause on the first failure and when the underlying exception type changes.
+The retry handler logs the original cause on the first failure and when the underlying exception
+type changes.
 Repeated failures of the same type on a consumer thread produce at most one warning per
 minute, without a stack trace. Successful processing after retry is logged once. Invalid message
 content is not explicitly written to logs.
 
-Saving, sending, and checkpointing have separate transactions. The temporary state is discarded on
-partition revocation or loss. Crashes, rebalances and ambiguous publication outcomes can still cause
-duplicates; this is not a durable outbox or an exactly-once guarantee.
+Saving, sending, and checkpointing are separate operations, with no cached registration result.
+A retry after a synchronous send or checkpoint failure can save and send the instance again.
+Crashes and rebalances can also cause duplicates. An asynchronous publication failure can occur after
+the position has advanced; the consumer does not retry those failures. These are the accepted limits
+of the asynchronous publication contract used for this temporary handover writer.
 
 `cluster_id` and `topic_id` stay NULL until handover. Instance-service refuses processing once
 history-service has assigned identity. Missing or out-of-range starting positions also stop processing

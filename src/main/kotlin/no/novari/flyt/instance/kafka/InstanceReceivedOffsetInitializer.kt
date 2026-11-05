@@ -8,7 +8,6 @@ import org.springframework.kafka.listener.ConsumerAwareRebalanceListener
 
 class InstanceReceivedOffsetInitializer(
     private val offsetRepository: InstanceReceivedOffsetRepository,
-    private val handler: InstanceReceivedHandler,
 ) : ConsumerAwareRebalanceListener {
     override fun onPartitionsAssigned(
         consumer: Consumer<*, *>,
@@ -29,20 +28,6 @@ class InstanceReceivedOffsetInitializer(
         } catch (failure: Exception) {
             throw InstanceReceivedAssignmentException(failure)
         }
-    }
-
-    override fun onPartitionsRevokedBeforeCommit(
-        consumer: Consumer<*, *>,
-        partitions: Collection<TopicPartition>,
-    ) {
-        handler.clearPending(partitions)
-    }
-
-    override fun onPartitionsLost(
-        consumer: Consumer<*, *>,
-        partitions: Collection<TopicPartition>,
-    ) {
-        handler.clearPending(partitions)
     }
 }
 

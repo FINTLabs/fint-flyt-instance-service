@@ -176,7 +176,7 @@ class InstanceReceivedErrorHandlerTest {
     }
 
     @Test
-    fun `polling failures do not discard pending work through a forced rebalance`() {
+    fun `polling failures do not force a rebalance`() {
         errors.handleOtherException(TimeoutException("Broker unavailable"), consumer, container, false)
 
         verify(consumer, never()).enforceRebalance()

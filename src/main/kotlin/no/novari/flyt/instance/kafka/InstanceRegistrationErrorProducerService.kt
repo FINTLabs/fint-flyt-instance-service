@@ -53,7 +53,7 @@ class InstanceRegistrationErrorProducerService(
         )
     }
 
-    fun publishGeneralSystemErrorEvent(instanceFlowHeaders: InstanceFlowHeaders) =
+    fun publishGeneralSystemErrorEvent(instanceFlowHeaders: InstanceFlowHeaders) {
         instanceFlowTemplate.send(
             InstanceFlowProducerRecord
                 .builder<InstanceErrorEvent>()
@@ -71,6 +71,7 @@ class InstanceRegistrationErrorProducerService(
                     ),
                 ).build(),
         )
+    }
 
     private companion object {
         private const val PARTITIONS = 1

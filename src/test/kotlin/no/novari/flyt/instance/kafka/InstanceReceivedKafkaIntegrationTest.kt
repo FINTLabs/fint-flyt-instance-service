@@ -26,8 +26,6 @@ import no.novari.kafka.topic.name.TopicNamePatternService
 import no.novari.kafka.topic.name.TopicNameService
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.AdminClientConfig
-import org.apache.kafka.clients.admin.AlterConfigOp
-import org.apache.kafka.clients.admin.ConfigEntry
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.admin.OffsetSpec
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -38,7 +36,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
-import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.header.Header
 import org.apache.kafka.common.header.internals.RecordHeader
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -133,7 +130,7 @@ class InstanceReceivedKafkaIntegrationTest {
     }
 
     @Test
-    fun `initializes an idle partition and checkpoints after actual broker publication`() {
+    fun `initializes an idle partition and publishes the saved instance`() {
         withConsumer { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 0)
@@ -175,7 +172,7 @@ class InstanceReceivedKafkaIntegrationTest {
     }
 
     @Test
-    fun `existing registration error is confirmed by the broker before checkpointing`() {
+    fun `registration failure publishes the existing error and advances`() {
         whenever(service.save(any())).thenThrow(IllegalArgumentException("invalid source data"))
 
         withConsumer { context ->
@@ -207,123 +204,21 @@ class InstanceReceivedKafkaIntegrationTest {
 
     @Test
     @ExtendWith(OutputCaptureExtension::class)
-    fun `registered publication recovers without saving again or producing an error`(output: CapturedOutput) {
+    fun `asynchronous registered publication failure does not block progress`(output: CapturedOutput) {
         withConsumer(failPublication = true) { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 0)
 
             send("{}")
             send("{}")
-            await().pollDelay(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(10)).untilAsserted {
-                assertEquals(0L, repository.findNextOffset(partition))
-                verify(service, times(1)).save(any())
-                assertEquals(0L, publishedRecords(registeredTopic))
-                assertEquals(0L, publishedErrors())
-            }
-
-            admin().use {
-                it
-                    .incrementalAlterConfigs(
-                        mapOf(
-                            ConfigResource(ConfigResource.Type.TOPIC, registeredTopic) to
-                                listOf(
-                                    AlterConfigOp(
-                                        ConfigEntry("max.message.bytes", "1048576"),
-                                        AlterConfigOp.OpType.SET,
-                                    ),
-                                ),
-                        ),
-                    ).all()
-                    .get(10, TimeUnit.SECONDS)
-            }
             awaitPosition(repository, 2)
 
-            await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
+            await().atMost(Duration.ofSeconds(10)).untilAsserted {
+                assertEquals(2L, committedOffset())
+                assertTrue(output.all.contains("RecordTooLargeException"))
+            }
+            assertEquals(0L, publishedRecords(registeredTopic))
             assertEquals(0L, publishedErrors())
-            assertEquals(2L, publishedRecords(registeredTopic))
-            assertTrue(
-                context
-                    .getBean(
-                        "instanceReceivedEventConsumer",
-                        ConcurrentMessageListenerContainer::class.java,
-                    ).isRunning,
-            )
-            verify(service, times(2)).save(any())
-            assertTrue(output.all.contains("Instance-received processing resumed after retry"))
-        }
-    }
-
-    @Test
-    fun `database recovery resumes without saving or publishing the first instance again`() {
-        withConsumer { context ->
-            val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
-            awaitPosition(repository, 0)
-            adminJdbc.execute("REVOKE UPDATE ON history_test.instance_received_offset FROM instance_writer")
-
-            send("{}")
-            send("{}")
-            await().pollDelay(Duration.ofSeconds(1)).atMost(Duration.ofSeconds(10)).untilAsserted {
-                assertEquals(0L, repository.findNextOffset(partition))
-                assertEquals(1L, publishedRecords(registeredTopic))
-                verify(service, times(1)).save(any())
-                assertTrue(
-                    context
-                        .getBean(
-                            "instanceReceivedEventConsumer",
-                            ConcurrentMessageListenerContainer::class.java,
-                        ).isRunning,
-                )
-            }
-
-            adminJdbc.execute("GRANT UPDATE ON history_test.instance_received_offset TO instance_writer")
-            awaitPosition(repository, 2)
-
-            assertEquals(2L, publishedRecords(registeredTopic))
-            verify(service, times(2)).save(any())
-        }
-    }
-
-    @Test
-    fun `failed error publication is retried automatically without saving again`() {
-        whenever(service.save(any())).thenThrow(IllegalArgumentException("invalid source data"))
-        withConsumer(failErrorPublication = true) { context ->
-            val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
-            awaitPosition(repository, 0)
-            send("{}")
-
-            await().pollDelay(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(10)).untilAsserted {
-                assertEquals(0L, repository.findNextOffset(partition))
-                verify(service, times(1)).save(any())
-                assertTrue(
-                    context
-                        .getBean(
-                            "instanceReceivedEventConsumer",
-                            ConcurrentMessageListenerContainer::class.java,
-                        ).isRunning,
-                )
-            }
-
-            admin().use {
-                it
-                    .incrementalAlterConfigs(
-                        mapOf(
-                            ConfigResource(ConfigResource.Type.TOPIC, errorTopic) to
-                                listOf(
-                                    AlterConfigOp(
-                                        ConfigEntry("max.message.bytes", "1048576"),
-                                        AlterConfigOp.OpType.SET,
-                                    ),
-                                ),
-                        ),
-                    ).all()
-                    .get(10, TimeUnit.SECONDS)
-            }
-            awaitPosition(repository, 1)
-            verify(service, times(1)).save(any())
-
-            send("{}")
-            awaitPosition(repository, 2)
-            assertEquals(2L, publishedErrors())
             verify(service, times(2)).save(any())
         }
     }
@@ -361,8 +256,10 @@ class InstanceReceivedKafkaIntegrationTest {
             send("{}")
             awaitPosition(repository, 2)
 
-            await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
-            assertEquals(1L, publishedErrors())
+            await().atMost(Duration.ofSeconds(10)).untilAsserted {
+                assertEquals(2L, committedOffset())
+                assertEquals(1L, publishedErrors())
+            }
             verify(service, times(1)).save(any())
         }
     }
@@ -377,8 +274,10 @@ class InstanceReceivedKafkaIntegrationTest {
             send("{}")
             awaitPosition(repository, 2)
 
-            await().atMost(Duration.ofSeconds(10)).untilAsserted { assertEquals(2L, committedOffset()) }
-            assertEquals(1L, publishedErrors())
+            await().atMost(Duration.ofSeconds(10)).untilAsserted {
+                assertEquals(2L, committedOffset())
+                assertEquals(1L, publishedErrors())
+            }
             verify(service, times(1)).save(any())
         }
     }
@@ -443,7 +342,7 @@ class InstanceReceivedKafkaIntegrationTest {
     }
 
     @Test
-    fun `redelivery preserves database progress and skips records already confirmed`() {
+    fun `redelivery preserves database progress and skips completed records`() {
         withConsumer(initialPosition = 1) { context ->
             val repository = context.getBean(InstanceReceivedOffsetRepository::class.java)
             awaitPosition(repository, 1)
@@ -460,7 +359,6 @@ class InstanceReceivedKafkaIntegrationTest {
         committed: Long? = 0,
         initialPosition: Long? = null,
         failPublication: Boolean = false,
-        failErrorPublication: Boolean = false,
         denyReadAtStartup: Boolean = false,
         action: (AssertableApplicationContext) -> Unit,
     ) {
@@ -468,7 +366,6 @@ class InstanceReceivedKafkaIntegrationTest {
             val registered = NewTopic(registeredTopic, 1, 1.toShort())
             val errors = NewTopic(errorTopic, 1, 1.toShort())
             if (failPublication) registered.configs(mapOf("max.message.bytes" to "64"))
-            if (failErrorPublication) errors.configs(mapOf("max.message.bytes" to "64"))
             admin
                 .createTopics(
                     listOf(NewTopic(sourceTopic, 1, 1.toShort()), registered, errors),

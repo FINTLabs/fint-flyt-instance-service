@@ -51,14 +51,16 @@ class InstanceRegisteredEventProducerService(
     fun publish(
         instanceFlowHeaders: InstanceFlowHeaders,
         instance: InstanceObjectDto,
-    ) = instanceFlowTemplate.send(
-        InstanceFlowProducerRecord
-            .builder<InstanceObjectDto>()
-            .instanceFlowHeaders(instanceFlowHeaders)
-            .topicNameParameters(topicNameParameters)
-            .value(instance)
-            .build(),
-    )
+    ) {
+        instanceFlowTemplate.send(
+            InstanceFlowProducerRecord
+                .builder<InstanceObjectDto>()
+                .instanceFlowHeaders(instanceFlowHeaders)
+                .topicNameParameters(topicNameParameters)
+                .value(instance)
+                .build(),
+        )
+    }
 
     private companion object {
         private const val PARTITIONS = 1
