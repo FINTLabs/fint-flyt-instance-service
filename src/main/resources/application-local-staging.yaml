@@ -3,6 +3,9 @@ fint:
 
 novari:
   flyt:
+    history:
+      database:
+        schema: fintlabs_no
     web-resource-server:
       security:
         api:
