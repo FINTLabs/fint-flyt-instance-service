@@ -10,6 +10,8 @@ springdoc:
 novari:
   flyt:
     instance-service:
+      database:
+        history-schema: ${HISTORY_DATABASE_SCHEMA}
       time-to-keep-instance-in-days: 60
       kafka:
         topic:

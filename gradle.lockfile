@@ -234,6 +234,7 @@ org.springframework:spring-webmvc:6.2.19=compileClasspath,productionRuntimeClass
 org.testcontainers:database-commons:1.21.4=testCompileClasspath,testRuntimeClasspath
 org.testcontainers:jdbc:1.21.4=testCompileClasspath,testRuntimeClasspath
 org.testcontainers:junit-jupiter:1.21.4=testCompileClasspath,testRuntimeClasspath
+org.testcontainers:kafka:1.21.4=testCompileClasspath,testRuntimeClasspath
 org.testcontainers:postgresql:1.21.4=testCompileClasspath,testRuntimeClasspath
 org.testcontainers:testcontainers:1.21.4=testCompileClasspath,testRuntimeClasspath
 org.webjars:swagger-ui:5.34.0=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
