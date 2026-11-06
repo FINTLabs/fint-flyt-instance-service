@@ -60,6 +60,32 @@ Swagger UI is then available at `http://localhost:8080/beta/fintlabs-no/swagger-
 - Consumes instance lifecycle events through `InstanceReceivedEventConsumerConfiguration` and `InstanceDispatchedConsumerConfiguration` to coordinate retries and header lookups.
 - Topic retention is governed by `novari.flyt.instance-service.kafka.topic.instance-processing-events-retention-time` (default four days). A millisecond suffix variant (`...-retention-time-ms`) is also supported for services that require explicit units.
 
+### Handover position for history-service (temporary)
+
+History-service is taking over consumption of `instance-received`. Until it does, this service records its progress in
+history-service's `instance_received_offset` table, so history-service can start where this service stopped.
+
+- After each `instance-received` record is handled (instance registered or error event sent), the consumer upserts
+  `next_offset = offset + 1` for the record's topic and partition. `GREATEST` keeps the position monotonic, so a
+  failed write only leaves the position behind until the next record moves it on. The position never gets ahead of
+  processing. A lagging position means history-service processes a few records again, or, if retention has already
+  removed them, refuses to start. The cutover procedure checks the position against the topic bounds and this
+  service's committed offset.
+- A failed write is thrown to the library error handler like any other listener failure. Rows already bound by
+  history-service (`cluster_id` set) are left unchanged. This service never reads the position or creates the table.
+- The history schema is derived from the database user: `<tenant>_fint_flyt_instance_service_db` becomes
+  `<tenant>_fint_flyt_history_service_db`. `novari.flyt.history.database.schema` overrides it. It is used locally,
+  where the table does not exist and every write logs an error.
+- The database role needs these grants, given by the table owner or an admin:
+
+  ```sql
+  GRANT USAGE ON SCHEMA <tenant>_fint_flyt_history_service_db TO <tenant>_fint_flyt_instance_service_db;
+  GRANT SELECT, INSERT, UPDATE ON <tenant>_fint_flyt_history_service_db.instance_received_offset
+      TO <tenant>_fint_flyt_instance_service_db;
+  ```
+
+Remove this when history-service has taken over and this consumer is shut down.
+
 ## Scheduled Tasks
 
 `InstanceCleanupService.cleanUp()` runs every 24 hours (initial delay 30 seconds) and deletes instances older than `novari.flyt.instance-service.time-to-keep-instance-in-days` (defaults to 60). When a record is removed the service publishes `instance-deleted` events.

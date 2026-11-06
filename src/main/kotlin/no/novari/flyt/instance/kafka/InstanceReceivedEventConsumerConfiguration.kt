@@ -1,5 +1,6 @@
 package no.novari.flyt.instance.kafka
 
+import no.novari.flyt.instance.InstanceReceivedOffsetRepository
 import no.novari.flyt.instance.InstanceService
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.kafka.instanceflow.consuming.InstanceFlowListenerFactoryService
@@ -55,6 +56,7 @@ class InstanceReceivedEventConsumerConfiguration(
         instanceRegisteredEventProducerService: InstanceRegisteredEventProducerService,
         instanceRegistrationErrorProducerService: InstanceRegistrationErrorProducerService,
         errorHandlerFactory: ErrorHandlerFactory,
+        instanceReceivedOffsetRepository: InstanceReceivedOffsetRepository,
     ): ConcurrentMessageListenerContainer<String, InstanceObjectDto> {
         return instanceFlowListenerFactoryService
             .createRecordListenerContainerFactory<InstanceObjectDto>(
@@ -80,6 +82,10 @@ class InstanceReceivedEventConsumerConfiguration(
                         instanceRegistrationErrorProducerService.publishGeneralSystemErrorEvent(
                             instanceFlowConsumerRecord.instanceFlowHeaders,
                         )
+                    }
+                    // Only after the record is handled, so the stored position never gets ahead of processing.
+                    with(instanceFlowConsumerRecord.consumerRecord) {
+                        instanceReceivedOffsetRepository.markProcessed(topic(), partition(), offset())
                     }
                 },
                 ListenerConfiguration
