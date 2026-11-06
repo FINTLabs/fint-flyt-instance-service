@@ -67,8 +67,10 @@ history-service's `instance_received_offset` table, so history-service can start
 
 - After each `instance-received` record is handled (instance registered or error event sent), the consumer upserts
   `next_offset = offset + 1` for the record's topic and partition. `GREATEST` keeps the position monotonic, so a
-  failed write only leaves the position behind until the next record moves it on. History-service may then process a
-  few records again, but never skips one.
+  failed write only leaves the position behind until the next record moves it on. The position never gets ahead of
+  processing. A lagging position means history-service processes a few records again, or, if retention has already
+  removed them, refuses to start. The cutover procedure checks the position against the topic bounds and this
+  service's committed offset.
 - A failed write is thrown to the library error handler like any other listener failure. Rows already bound by
   history-service (`cluster_id` set) are left unchanged. This service never reads the position or creates the table.
 - The history schema is derived from the database user: `<tenant>_fint_flyt_instance_service_db` becomes
