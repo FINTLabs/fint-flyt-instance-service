@@ -7,7 +7,18 @@ import org.springframework.data.repository.query.Param
 import java.time.Instant
 
 interface InstanceRepository : JpaRepository<InstanceObject, Long> {
-    @Query("SELECT i FROM InstanceObject i WHERE i.createdAt < :thresholdDate")
+    @Query(
+        """
+        SELECT i FROM InstanceObject i
+        WHERE i.createdAt < :thresholdDate
+          AND NOT EXISTS (
+              SELECT c.id
+              FROM InstanceObjectCollection c
+              JOIN c.objects child
+              WHERE child.id = i.id
+          )
+        """,
+    )
     fun findAllOlderThan(
         @Param("thresholdDate") thresholdDate: Instant,
     ): List<InstanceObject>
