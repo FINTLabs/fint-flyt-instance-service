@@ -5,6 +5,7 @@ import no.novari.flyt.instance.kafka.InstanceFlowHeadersForRegisteredInstanceReq
 import no.novari.flyt.instance.model.InstanceMappingService
 import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.instance.model.entities.InstanceObject
+import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -13,6 +14,7 @@ import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -20,6 +22,7 @@ import org.springframework.dao.EmptyResultDataAccessException
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import java.util.UUID
 
 class InstanceServiceTest {
     @Mock
@@ -151,4 +154,35 @@ class InstanceServiceTest {
 
         instanceService.deleteAllOlderThan(days)
     }
+
+    @Test
+    fun `deletes dispatched instance and publishes deletion event`() {
+        val instance = InstanceObject(id = 1L)
+        val headers = dispatchedHeaders()
+        doReturn(instance).whenever(instanceRepository).findForDeletionById(1L)
+
+        instanceService.deleteInstanceByInstanceFlowHeaders(headers)
+
+        verify(instanceRepository).delete(instance)
+        verify(instanceDeletedEventProducerService).publish(headers)
+    }
+
+    @Test
+    fun `skips deletion event when dispatched instance is already deleted`() {
+        val headers = dispatchedHeaders()
+        doReturn(null).whenever(instanceRepository).findForDeletionById(1L)
+
+        instanceService.deleteInstanceByInstanceFlowHeaders(headers)
+
+        verify(instanceRepository, never()).delete(any<InstanceObject>())
+        verify(instanceDeletedEventProducerService, never()).publish(any<InstanceFlowHeaders>())
+    }
+
+    private fun dispatchedHeaders() =
+        InstanceFlowHeaders
+            .builder()
+            .sourceApplicationId(1L)
+            .correlationId(UUID.randomUUID())
+            .instanceId(1L)
+            .build()
 }
