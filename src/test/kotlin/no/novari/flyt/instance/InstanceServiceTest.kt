@@ -19,6 +19,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.transaction.support.TransactionOperations
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
@@ -49,6 +50,7 @@ class InstanceServiceTest {
                 instanceMappingService,
                 instanceDeletedEventProducerService,
                 instanceFlowHeadersForRegisteredInstanceRequestProducerService,
+                TransactionOperations.withoutTransaction(),
             )
     }
 
