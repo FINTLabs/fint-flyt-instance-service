@@ -8,6 +8,7 @@ import no.novari.flyt.instance.model.dtos.InstanceObjectDto
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.support.TransactionOperations
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -18,6 +19,7 @@ class InstanceService(
     private val instanceDeletedEventProducerService: InstanceDeletedEventProducerService,
     private val instanceFlowHeadersForRegisteredInstanceRequestProducerService:
         InstanceFlowHeadersForRegisteredInstanceRequestProducerService,
+    private val transactionOperations: TransactionOperations,
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -76,13 +78,27 @@ class InstanceService(
         }
     }
 
+    /**
+     * History-service deletes dispatched instances too. Whichever service deletes the row publishes the event after
+     * commit; the other finds nothing and skips it.
+     */
     fun deleteInstanceByInstanceFlowHeaders(instanceFlowHeaders: InstanceFlowHeaders) {
         val instanceId =
             requireNotNull(instanceFlowHeaders.instanceId) {
                 "Instance flow headers must contain instance id when deleting dispatched instance"
             }
 
-        instanceRepository.deleteById(instanceId)
+        val deleted =
+            transactionOperations.execute {
+                instanceRepository.findForDeletionById(instanceId)?.also(instanceRepository::delete) != null
+            } == true
+        if (!deleted) {
+            log.atInfo {
+                message = "Instance with id={} was already deleted; skipping deletion event"
+                arguments = arrayOf(instanceId)
+            }
+            return
+        }
         instanceDeletedEventProducerService.publish(instanceFlowHeaders)
     }
 }
